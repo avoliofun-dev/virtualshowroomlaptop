@@ -136,8 +136,8 @@ const state = {
   recommendedLaptop: null
 };
 
-// Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize Application with resilient readyState check
+function bootApp() {
   applyThemeUI(state.theme);
   initVirtualOffice();
   initHUD();
@@ -153,7 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
   render2DView();
   initTahap4Features();
   initTahap5Features();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootApp);
+} else {
+  bootApp();
+}
 
 // 1. Initialize Virtual Office 3D
 let virtualOffice;

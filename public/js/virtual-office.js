@@ -155,25 +155,25 @@ export class VirtualOffice {
     setTimeout(this.onResize, 450);
 
     // 4. Lights
-    this.setupLighting();
+    try { this.setupLighting(); } catch (e) { console.error('Lighting init error:', e); }
 
     // 5. Open Environment & Floor (NO CEILING OBSTRUCTIONS)
-    this.buildOfficeArchitecture();
+    try { this.buildOfficeArchitecture(); } catch (e) { console.error('Office architecture error:', e); }
 
     // 6. Interactive Zones & Props
-    this.buildZones();
+    try { this.buildZones(); } catch (e) { console.error('Zones build error:', e); }
 
     // 7. Player Avatar
-    this.buildPlayer();
+    try { this.buildPlayer(); } catch (e) { console.error('Player avatar build error:', e); }
 
-    // 7B. Live NPC Visitors (Tahap 5 Showroom Simulation)
-    this.buildNPCVisitors();
+    // 7B. Live NPC Visitors (Tahap 5 Showroom Simulation & Walking Maya Frontliner)
+    try { this.buildNPCVisitors(); } catch (e) { console.error('NPC visitors build error:', e); }
 
     // 8. Event Listeners for Orbit, Pan, Zoom, and Movement
-    this.setupInputListeners();
+    try { this.setupInputListeners(); } catch (e) { console.error('Input listeners error:', e); }
 
     // 9. Apply initial theme
-    this.applyTheme(this.theme);
+    try { this.applyTheme(this.theme); } catch (e) { console.error('Theme apply error:', e); }
 
     // 10. Start Loop
     this.animate = this.animate.bind(this);
@@ -424,13 +424,13 @@ export class VirtualOffice {
       recLaptop.position.set(0, 1.1, 0.4);
       group.add(recLaptop);
 
-      // Official 3D Roblox Frontliner: Maya (Customer Service & AI Consultant)
-      this.frontlinerMaya = this.createFrontlinerModel({
-        name: 'Maya • Frontliner AI',
-        role: 'Tech Consultant'
-      });
-      this.frontlinerMaya.group.position.set(0, 0, -0.45);
-      group.add(this.frontlinerMaya.group);
+      // Holographic Ekalaya Tech Concierge Terminal Beacon
+      const holoGeo = new THREE.TorusGeometry(0.85, 0.03, 16, 40);
+      const holoMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe, wireframe: true });
+      const holo = new THREE.Mesh(holoGeo, holoMat);
+      holo.position.set(0, 2.1, 0);
+      group.add(holo);
+      this.floatingItems.push({ mesh: holo, basePos: 2.1, rotSpeed: 1.5 });
 
     } else if (def.id === 'display') {
       // 4 Interactive Laptop Showcase Pedestals
@@ -963,6 +963,18 @@ export class VirtualOffice {
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
         raycaster.setFromCamera(mouse, this.camera);
+
+        // Click on Frontliner Maya to start intelligent n8n consultation
+        if (this.frontlinerMaya && this.frontlinerMaya.group) {
+          const mayaIntersects = raycaster.intersectObject(this.frontlinerMaya.group, true);
+          if (mayaIntersects.length > 0) {
+            if (window.openFrontlinerChat) {
+              window.openFrontlinerChat();
+              return;
+            }
+          }
+        }
+
         const intersects = raycaster.intersectObject(this.floor);
         if (intersects.length > 0) {
           this.targetMovePoint = intersects[0].point;
@@ -1240,200 +1252,11 @@ export class VirtualOffice {
     this.updatePlayerPhysics(delta);
     this.updateNPCVisitors(delta);
 
-    // Frontliner Maya responsive animation
-    if (this.frontlinerMaya) {
-      this.frontlinerMaya.torso.position.y = 0.82 + Math.sin(elapsedTime * 2.2) * 0.005;
-      this.frontlinerMaya.headGroup.position.y = 1.12 + Math.sin(elapsedTime * 2.2) * 0.005;
-
-      if (this.player) {
-        const dx = this.player.position.x - 0;
-        const dz = this.player.position.z - 12;
-        const dist = Math.sqrt(dx * dx + dz * dz);
-        if (dist < 10.0) {
-          const lookAngle = Math.atan2(dx, dz);
-          this.frontlinerMaya.headGroup.rotation.y = THREE.MathUtils.lerp(
-            this.frontlinerMaya.headGroup.rotation.y,
-            Math.max(-0.6, Math.min(0.6, lookAngle)),
-            0.08
-          );
-        } else {
-          this.frontlinerMaya.headGroup.rotation.y = Math.sin(elapsedTime * 0.8) * 0.08;
-        }
-      }
-    }
-
     this.renderer.render(this.scene, this.camera);
   }
 
   // ==========================================================================
-  // Official Frontliner Maya 3D Model (Connected to n8n AI)
-  // ==========================================================================
-  createFrontlinerModel(config) {
-    const group = new THREE.Group();
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xfed19e, roughness: 0.5 });
-    const hairMat = new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.8 });
-    const jacketMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.35 });
-    const shirtMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
-    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-    const blackMat = new THREE.MeshBasicMaterial({ color: 0x09090b });
-    const accentMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
-    const mouthMat = new THREE.MeshBasicMaterial({ color: 0xc0504d });
-
-    const meshContainer = new THREE.Group();
-    group.add(meshContainer);
-
-    // Torso (0.48 x 0.54 x 0.25)
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.54, 0.25), jacketMat);
-    torso.position.set(0, 0.82, 0);
-    torso.castShadow = true;
-    meshContainer.add(torso);
-
-    // Inner White Shirt
-    const shirt = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.26, 0.02), shirtMat);
-    shirt.position.set(0, 0.12, 0.126);
-    torso.add(shirt);
-
-    // Frontliner Lanyard (Cyan Ribbon)
-    const lanyard = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.40, 0.02), accentMat);
-    lanyard.position.set(0, 0.04, 0.128);
-    torso.add(lanyard);
-
-    // Frontliner ID Card
-    const idCard = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.02), whiteMat);
-    idCard.position.set(0, -0.10, 0.13);
-    torso.add(idCard);
-
-    // Head Group
-    const headGroup = new THREE.Group();
-    headGroup.position.set(0, 1.12, 0);
-    meshContainer.add(headGroup);
-
-    // Head Cube
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.36, 0.36), skinMat);
-    head.position.set(0, 0.18, 0);
-    head.castShadow = true;
-    headGroup.add(head);
-
-    // Eyes
-    const leftEye = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.06, 0.01), blackMat);
-    leftEye.position.set(-0.08, 0.19, 0.181);
-    headGroup.add(leftEye);
-
-    const rightEye = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.06, 0.01), blackMat);
-    rightEye.position.set(0.08, 0.19, 0.181);
-    headGroup.add(rightEye);
-
-    // Smile
-    const smile = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.01), mouthMat);
-    smile.position.set(0, 0.10, 0.181);
-    headGroup.add(smile);
-
-    // Hair
-    const hair = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.12, 0.38), hairMat);
-    hair.position.set(0, 0.32, 0);
-    headGroup.add(hair);
-
-    const bangs = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.05), hairMat);
-    bangs.position.set(0, 0.28, 0.19);
-    headGroup.add(bangs);
-
-    // Headset + Mic Boom
-    const band = new THREE.Mesh(new THREE.BoxGeometry(0.41, 0.035, 0.08), blackMat);
-    band.position.set(0, 0.38, 0);
-    headGroup.add(band);
-
-    const earcup = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.10), accentMat);
-    earcup.position.set(-0.20, 0.18, 0);
-    headGroup.add(earcup);
-
-    const micArm = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.14), blackMat);
-    micArm.position.set(-0.16, 0.12, 0.12);
-    micArm.rotation.y = -0.3;
-    headGroup.add(micArm);
-
-    const micTip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.04), accentMat);
-    micTip.position.set(-0.12, 0.12, 0.19);
-    headGroup.add(micTip);
-
-    // Arms resting forward on reception desk
-    const leftArm = new THREE.Group();
-    leftArm.position.set(-0.34, 1.05, 0);
-    leftArm.rotation.x = -0.45;
-    meshContainer.add(leftArm);
-    const lSleeve = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 0.18), jacketMat);
-    lSleeve.position.set(0, -0.18, 0);
-    leftArm.add(lSleeve);
-    const lHand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.16), skinMat);
-    lHand.position.set(0, -0.40, 0);
-    leftArm.add(lHand);
-
-    const rightArm = new THREE.Group();
-    rightArm.position.set(0.34, 1.05, 0);
-    rightArm.rotation.x = -0.45;
-    meshContainer.add(rightArm);
-    const rSleeve = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.36, 0.18), jacketMat);
-    rSleeve.position.set(0, -0.18, 0);
-    rightArm.add(rSleeve);
-    const rHand = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.16), skinMat);
-    rHand.position.set(0, -0.40, 0);
-    rightArm.add(rHand);
-
-    // Legs
-    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.54, 0.20), pantsMat);
-    leftLeg.position.set(-0.12, 0.27, 0);
-    meshContainer.add(leftLeg);
-
-    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.54, 0.20), pantsMat);
-    rightLeg.position.set(0.12, 0.27, 0);
-    meshContainer.add(rightLeg);
-
-    // 3D Canvas Billboard Overhead Sprite
-    const nameCanvas = document.createElement('canvas');
-    nameCanvas.width = 340;
-    nameCanvas.height = 76;
-    const ctx = nameCanvas.getContext('2d');
-    ctx.fillStyle = 'rgba(7, 9, 14, 0.88)';
-    ctx.roundRect ? ctx.roundRect(8, 8, 324, 60, 30) : ctx.rect(8, 8, 324, 60);
-    ctx.fill();
-    ctx.strokeStyle = '#00f2fe';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // Glowing green online dot
-    ctx.beginPath();
-    ctx.arc(38, 38, 7, 0, Math.PI * 2);
-    ctx.fillStyle = '#10b981';
-    ctx.fill();
-
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('Maya • Frontliner AI', 58, 35);
-
-    ctx.font = '13px sans-serif';
-    ctx.fillStyle = '#00f2fe';
-    ctx.fillText('Konsultan n8n Online 🟢', 58, 54);
-
-    const nameTex = new THREE.CanvasTexture(nameCanvas);
-    nameTex.minFilter = THREE.LinearFilter;
-    const spriteMat = new THREE.SpriteMaterial({ map: nameTex, transparent: true });
-    const nameSprite = new THREE.Sprite(spriteMat);
-    nameSprite.position.set(0, 1.95, 0);
-    nameSprite.scale.set(1.9, 0.44, 1);
-    group.add(nameSprite);
-
-    return {
-      group,
-      meshContainer,
-      torso,
-      headGroup,
-      leftArm,
-      rightArm
-    };
-  }
-
-  // ==========================================================================
-  // Tahap 5: Autonomous NPC Live Visitors (Ghost Visitors in Showroom)
+  // Tahap 5: Autonomous NPC Live Visitors (including Frontliner Maya AI)
   // ==========================================================================
   createNPCModel(config) {
     const group = new THREE.Group();
@@ -1489,6 +1312,42 @@ export class VirtualOffice {
       const earcupR = earcup.clone();
       earcupR.position.x = 0.20;
       headGroup.add(earcupR);
+
+      // Microphone boom for Frontliner headset
+      if (config.isFrontliner) {
+        const micArm = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.14), blackMat);
+        micArm.position.set(-0.16, 0.12, 0.12);
+        micArm.rotation.y = -0.3;
+        headGroup.add(micArm);
+
+        const micTip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.04), accentMat);
+        micTip.position.set(-0.12, 0.12, 0.19);
+        headGroup.add(micTip);
+      }
+    }
+
+    // Frontliner Uniform details on torso
+    if (config.isFrontliner) {
+      // Inner crisp white shirt
+      const shirt = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.26, 0.02), whiteMat);
+      shirt.position.set(0, 0.12, 0.126);
+      torso.add(shirt);
+
+      // Cyan Frontliner Lanyard ribbon
+      const lanyard = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.38, 0.02), accentMat);
+      lanyard.position.set(0, 0.04, 0.128);
+      torso.add(lanyard);
+
+      // Frontliner ID card
+      const idCard = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.02), whiteMat);
+      idCard.position.set(0, -0.09, 0.13);
+      torso.add(idCard);
+
+      // Polite smile
+      const mouthMat = new THREE.MeshBasicMaterial({ color: 0xc0504d });
+      const smile = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.02, 0.01), mouthMat);
+      smile.position.set(0, 0.09, 0.181);
+      headGroup.add(smile);
     }
 
     // Left Arm
@@ -1546,35 +1405,50 @@ export class VirtualOffice {
     nameCanvas.width = 256;
     nameCanvas.height = 64;
     const ctx = nameCanvas.getContext('2d');
-    ctx.fillStyle = 'rgba(7, 9, 14, 0.85)';
-    ctx.roundRect ? ctx.roundRect(8, 8, 240, 48, 24) : ctx.rect(8, 8, 240, 48);
-    ctx.fill();
-    ctx.strokeStyle = config.badgeColor || '#00f2fe';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    if (ctx) {
+      ctx.fillStyle = 'rgba(7, 9, 14, 0.88)';
+      if (ctx.roundRect) {
+        ctx.roundRect(8, 8, 240, 48, 24);
+      } else {
+        ctx.rect(8, 8, 240, 48);
+      }
+      ctx.fill();
+      ctx.strokeStyle = config.badgeColor || '#00f2fe';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
 
-    // Green pulse dot in billboard
-    ctx.beginPath();
-    ctx.arc(32, 32, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#10b981';
-    ctx.fill();
+      // Green pulse dot in billboard
+      ctx.beginPath();
+      ctx.arc(30, 32, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#10b981';
+      ctx.fill();
 
-    // Name text
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(config.name, 48, 38);
+      // Name text
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(config.name, 46, config.isFrontliner ? 28 : 38);
 
-    const nameTex = new THREE.CanvasTexture(nameCanvas);
-    nameTex.minFilter = THREE.LinearFilter;
-    const spriteMat = new THREE.SpriteMaterial({ map: nameTex, transparent: true });
-    const nameSprite = new THREE.Sprite(spriteMat);
-    nameSprite.position.set(0, 1.85, 0);
-    nameSprite.scale.set(1.5, 0.38, 1);
-    group.add(nameSprite);
+      if (config.isFrontliner) {
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#00f2fe';
+        ctx.fillText('Konsultan n8n Online 🟢', 46, 46);
+      }
+
+      const nameTex = new THREE.CanvasTexture(nameCanvas);
+      nameTex.minFilter = THREE.LinearFilter;
+      nameTex.wrapS = THREE.ClampToEdgeWrapping;
+      nameTex.wrapT = THREE.ClampToEdgeWrapping;
+      const spriteMat = new THREE.SpriteMaterial({ map: nameTex, transparent: true });
+      const nameSprite = new THREE.Sprite(spriteMat);
+      nameSprite.position.set(0, 1.95, 0);
+      nameSprite.scale.set(1.6, 0.40, 1);
+      group.add(nameSprite);
+    }
 
     return {
       group,
       meshContainer,
+      torso,
       leftArm,
       rightArm,
       leftLeg,
@@ -1586,6 +1460,32 @@ export class VirtualOffice {
   buildNPCVisitors() {
     this.npcVisitors = [];
     const npcConfigs = [
+      // 1. MAYA — Official Walking Frontliner Officer (n8n AI Consultant)
+      {
+        id: 'maya',
+        isFrontliner: true,
+        name: 'Maya • Frontliner AI',
+        role: 'Tech Consultant',
+        badgeColor: '#00f2fe',
+        jacketColor: 0x0f172a, // Official navy blazer
+        pantsColor: 0x1e293b,
+        hairColor: 0x3d2314, // Neat bob hair
+        accentColor: 0x00f2fe,
+        hasHeadset: true,
+        startPos: { x: 2.2, z: 9.5 },
+        speed: 2.8,
+        waypoints: [
+          { x: 2.2, z: 9.5 },    // Lobby Reception
+          { x: -5.0, z: 6.0 },   // Walking to Laptop Display
+          { x: -11.0, z: -1.0 }, // ROG Titan X & ZenAir showcase
+          { x: -7.0, z: -8.0 },  // Center walkway
+          { x: 0.0, z: -10.5 },  // Accessories Lounge
+          { x: 8.5, z: -4.0 },   // Benchmark Studio
+          { x: 9.5, z: 7.0 },    // Flash Sale Vault
+          { x: 1.0, z: 11.0 }    // Returning to Lobby Counter
+        ]
+      },
+      // 2. Budi (Gamer Visitor)
       {
         name: 'Budi (Gamer)',
         role: 'ROG Enthusiast',
@@ -1595,6 +1495,7 @@ export class VirtualOffice {
         accentColor: 0xff0055,
         hasHeadset: true,
         startPos: { x: -10, z: -2 },
+        speed: 2.5,
         waypoints: [
           { x: -10, z: -2 },
           { x: -7, z: 2 },
@@ -1602,6 +1503,7 @@ export class VirtualOffice {
           { x: -8, z: -3 }
         ]
       },
+      // 3. Clarissa (Studio Creator Visitor)
       {
         name: 'Clarissa (Creator)',
         role: 'Studio Pro',
@@ -1611,6 +1513,7 @@ export class VirtualOffice {
         accentColor: 0x00f2fe,
         hasHeadset: false,
         startPos: { x: 10, z: -4 },
+        speed: 2.4,
         waypoints: [
           { x: 10, z: -4 },
           { x: 13, z: 0 },
@@ -1618,6 +1521,7 @@ export class VirtualOffice {
           { x: 12, z: -2 }
         ]
       },
+      // 4. Dimas Aditya (Student / Value Visitor)
       {
         name: 'Dimas Aditya',
         role: 'Visitor',
@@ -1627,6 +1531,7 @@ export class VirtualOffice {
         accentColor: 0x00f59b,
         hasHeadset: false,
         startPos: { x: 0, z: 8 },
+        speed: 2.6,
         waypoints: [
           { x: 0, z: 8 },
           { x: -4, z: 10 },
@@ -1641,16 +1546,24 @@ export class VirtualOffice {
       npcModel.group.position.set(cfg.startPos.x, 0, cfg.startPos.z);
       this.scene.add(npcModel.group);
 
-      this.npcVisitors.push({
+      const record = {
         ...npcModel,
         config: cfg,
         waypoints: cfg.waypoints,
         currentWpIdx: 0,
         waitTime: 2.0 + Math.random() * 3.0,
         isWaiting: true,
+        isInteracting: false,
         walkCycle: Math.random() * Math.PI,
-        speed: 2.6
-      });
+        speed: cfg.speed || 2.6
+      };
+
+      this.npcVisitors.push(record);
+
+      // Save Frontliner Maya reference for direct interaction
+      if (cfg.isFrontliner) {
+        this.frontlinerMaya = record;
+      }
     });
   }
 
@@ -1658,6 +1571,38 @@ export class VirtualOffice {
     if (!this.npcVisitors) return;
 
     this.npcVisitors.forEach(npc => {
+      // Special Frontliner Interaction: when player approaches Maya
+      if (npc.config && npc.config.isFrontliner && this.player) {
+        const dxP = this.player.position.x - npc.group.position.x;
+        const dzP = this.player.position.z - npc.group.position.z;
+        const distP = Math.sqrt(dxP * dxP + dzP * dzP);
+
+        if (distP < 4.2) {
+          // Maya detects player: stops walking, turns to face player, and waves!
+          npc.isInteracting = true;
+          const targetAngle = Math.atan2(dxP, dzP);
+          let diff = targetAngle - npc.group.rotation.y;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          npc.group.rotation.y += diff * Math.min(delta * 6.0, 1.0);
+
+          // Animated friendly greeting wave with right arm
+          const elapsed = this.clock.getElapsedTime();
+          npc.rightArm.rotation.x = -1.2 + Math.sin(elapsed * 6.5) * 0.35;
+          npc.rightArm.rotation.z = -0.35;
+          npc.leftArm.rotation.x = THREE.MathUtils.lerp(npc.leftArm.rotation.x, 0, 0.2);
+          npc.leftLeg.rotation.x = THREE.MathUtils.lerp(npc.leftLeg.rotation.x, 0, 0.2);
+          npc.rightLeg.rotation.x = THREE.MathUtils.lerp(npc.rightLeg.rotation.x, 0, 0.2);
+          npc.headGroup.rotation.y = Math.sin(elapsed * 1.5) * 0.08;
+          return;
+        } else {
+          if (npc.isInteracting) {
+            npc.isInteracting = false;
+            npc.rightArm.rotation.z = -0.10;
+          }
+        }
+      }
+
       const targetWp = npc.waypoints[npc.currentWpIdx];
 
       if (npc.isWaiting) {
@@ -1681,7 +1626,7 @@ export class VirtualOffice {
       const dz = targetWp.z - npc.group.position.z;
       const dist = Math.sqrt(dx * dx + dz * dz);
 
-      if (dist < 0.4) {
+      if (dist < 0.45) {
         npc.isWaiting = true;
         npc.waitTime = 3.5 + Math.random() * 4.0;
         return;
