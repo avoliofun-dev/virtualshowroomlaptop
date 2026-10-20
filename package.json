@@ -2,8 +2,9 @@
   "name": "ekalaya-creative-agency-virtual-office",
   "version": "1.0.0",
   "description": "3D Virtual Office & Automation Showroom for Ekalaya Creative Agency",
-  "main": "server.js",
+  "main": "index.html",
   "scripts": {
+    "build": "echo 'Static site ready for Vercel'",
     "start": "node server.js",
     "dev": "node server.js"
   },

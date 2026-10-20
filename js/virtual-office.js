@@ -112,17 +112,34 @@ export class VirtualOffice {
     this.scene = new THREE.Scene();
     this.setupThemeColors();
 
-    // 2. Camera
-    const aspect = this.container.clientWidth / this.container.clientHeight;
+    // 2. Camera with safe dimension fallbacks
+    const width = this.container.clientWidth || window.innerWidth || 1280;
+    const height = this.container.clientHeight || window.innerHeight || 720;
+    const aspect = width / (height || 1);
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 250);
 
     // 3. Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.container.appendChild(this.renderer.domElement);
+
+    // Dynamic Window Resize Listener
+    this.onResize = () => {
+      const w = this.container.clientWidth || window.innerWidth || 1280;
+      const h = this.container.clientHeight || window.innerHeight || 720;
+      if (w > 0 && h > 0 && this.camera && this.renderer) {
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(w, h);
+      }
+    };
+    window.addEventListener('resize', this.onResize);
+    window.addEventListener('orientationchange', () => setTimeout(this.onResize, 200));
+    setTimeout(this.onResize, 100);
+    setTimeout(this.onResize, 450);
 
     // 4. Lights
     this.setupLighting();

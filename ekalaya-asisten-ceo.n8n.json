@@ -1,0 +1,1016 @@
+{
+  "name": "Ekalaya - Asisten CEO",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Asisten CEO Ekalaya\n**Jalur 1:** briefing eksekutif otomatis jam 07:00 WIB (Senin = rekap 7 hari).\n**Jalur 2:** persetujuan. Permintaan kecil disetujui otomatis oleh aturan, permintaan besar dikirim ke CEO dengan tombol Setujui/Tolak.\n\nGanti semua nilai `GANTI...` dan atur batas di node 'Aturan Delegasi'.",
+        "height": 190,
+        "width": 460
+      },
+      "id": "note",
+      "name": "Catatan",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "jadwal",
+      "name": "Jam 07:00 Pagi",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GANTI_ID_GOOGLE_SHEET"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "options": {}
+      },
+      "id": "baca-leads",
+      "name": "Baca Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        -80
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GANTI_ID_GOOGLE_SHEET"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Pesanan"
+        },
+        "options": {}
+      },
+      "id": "baca-pesanan",
+      "name": "Baca Pesanan",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        100
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "gabung",
+      "name": "Gabung Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        460,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const leads = $('Baca Leads').all().map(i => i.json).filter(r => r.diproses_pada);\nconst pesanan = $('Baca Pesanan').all().map(i => i.json).filter(r => r.tanggal);\n\nconst hariIni = new Date();\nconst hari = hariIni.getDay(); // 1 = Senin\nconst periode = hari === 1 ? 7 : 1; // Senin: rekap mingguan\nconst MS = 24 * 60 * 60 * 1000;\nconst t1 = Date.now() - periode * MS;\nconst t0 = Date.now() - 2 * periode * MS;\n\nconst inRange = (v, a, b) => { const t = new Date(v).getTime(); return t >= a && t < b; };\nconst angka = v => Number(String(v).replace(/[^0-9.-]/g, '')) || 0;\nconst lunas = r => ['lunas', 'paid', 'selesai', 'dikirim'].includes(String(r.status || '').toLowerCase());\n\nconst pNow = pesanan.filter(r => inRange(r.tanggal, t1, Infinity));\nconst pPrev = pesanan.filter(r => inRange(r.tanggal, t0, t1));\nconst lNow = leads.filter(r => inRange(r.diproses_pada, t1, Infinity));\nconst lPrev = leads.filter(r => inRange(r.diproses_pada, t0, t1));\n\nconst omzet = a => a.filter(lunas).reduce((s, r) => s + angka(r.total), 0);\nconst persen = (a, b) => b === 0 ? (a === 0 ? 0 : 100) : Math.round(((a - b) / b) * 100);\nconst rata = a => a.length ? Math.round(a.reduce((s, r) => s + angka(r.skor), 0) / a.length) : 0;\n\nconst konversi = lNow.length ? Math.round((pNow.filter(lunas).length / lNow.length) * 100) : 0;\n\nreturn [{ json: {\n  periode_hari: periode,\n  omzet: omzet(pNow), omzet_sebelumnya: omzet(pPrev), omzet_perubahan_persen: persen(omzet(pNow), omzet(pPrev)),\n  pesanan: pNow.length, pesanan_sebelumnya: pPrev.length,\n  pesanan_belum_bayar: pNow.filter(r => !lunas(r)).length,\n  lead: lNow.length, lead_sebelumnya: lPrev.length, lead_perubahan_persen: persen(lNow.length, lPrev.length),\n  lead_prioritas_tinggi: lNow.filter(r => r.prioritas === 'tinggi').length,\n  keluhan: lNow.filter(r => r.kategori === 'keluhan').length,\n  rata_rata_skor_lead: rata(lNow),\n  konversi_lead_ke_pesanan_persen: konversi,\n  lead_teratas: [...lNow].sort((a, b) => angka(b.skor) - angka(a.skor)).slice(0, 3)\n    .map(r => ({ nama: r.nama, produk: r.produk, skor: r.skor, saran: r.saran_tindakan }))\n} }];"
+      },
+      "id": "kpi",
+      "name": "Hitung KPI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 700, system: \"Anda adalah chief of staff untuk pemilik/CEO sebuah toko online yang menjual lewat kantor virtual 3D (Ekalaya). Dari data KPI yang diberikan (periode sekarang vs sebelumnya), tulis briefing eksekutif dalam bahasa Indonesia, maksimal 200 kata, teks biasa tanpa markdown, dengan urutan: 1) Inti kondisi dalam satu kalimat, 2) Angka kunci dan perubahannya, 3) Dua risiko, 4) Dua peluang, 5) Tiga keputusan yang butuh perhatian CEO hari ini. Jangan mengarang angka yang tidak ada di data. Jika data kosong, katakan data belum cukup dan sarankan apa yang perlu dicatat.\", messages: [{ role: 'user', content: JSON.stringify($json) }] }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "ai-brief",
+      "name": "AI Briefing CEO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GANTI",
+          "name": "Anthropic API Key (header x-api-key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "chatId": "GANTI_CHAT_ID_CEO",
+        "text": "={{ '🏢 Briefing CEO Ekalaya' + ($('Hitung KPI').first().json.periode_hari === 7 ? ' (rekap 7 hari)' : ' (24 jam terakhir)') + '\\n\\n' + $json.content[0].text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "tg-brief",
+      "name": "Kirim Briefing",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "GANTI",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ekalaya-approval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh",
+      "name": "Webhook Persetujuan",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        360
+      ],
+      "webhookId": "ekalaya-approval-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "s1",
+              "leftValue": "={{ $json.headers['x-secret'] }}",
+              "rightValue": "={{ $env.N8N_SECRET }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "secret",
+      "name": "Cek Secret",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, pesan: 'permintaan diterima' } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "r200",
+      "name": "Balas 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: 'unauthorized' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "r401",
+      "name": "Balas 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "id",
+              "value": "={{ $('Webhook Persetujuan').item.json.body.id || 'REQ-' + $now.toMillis() }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "jenis",
+              "value": "={{ String($('Webhook Persetujuan').item.json.body.jenis || 'pengeluaran').toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "pemohon",
+              "value": "={{ $('Webhook Persetujuan').item.json.body.pemohon || 'Tidak diketahui' }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "jumlah",
+              "value": "={{ Number($('Webhook Persetujuan').item.json.body.jumlah) || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "5",
+              "name": "diskon_persen",
+              "value": "={{ Number($('Webhook Persetujuan').item.json.body.diskon_persen) || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "6",
+              "name": "alasan",
+              "value": "={{ $('Webhook Persetujuan').item.json.body.alasan || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "callback_url",
+              "value": "={{ $('Webhook Persetujuan').item.json.body.callback_url || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "norm",
+      "name": "Normalisasi Approval",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ATUR BATAS DELEGASI DI SINI (rupiah, dan persen untuk diskon)\nconst BATAS_PENGELUARAN = 500000;\nconst BATAS_REFUND = 200000;\nconst BATAS_DISKON_PERSEN = 10;\n\nconst r = $input.first().json;\nlet otomatis = false;\nif (r.jenis === 'pengeluaran') otomatis = r.jumlah > 0 && r.jumlah <= BATAS_PENGELUARAN;\nelse if (r.jenis === 'refund') otomatis = r.jumlah > 0 && r.jumlah <= BATAS_REFUND;\nelse if (r.jenis === 'diskon') otomatis = r.diskon_persen > 0 && r.diskon_persen <= BATAS_DISKON_PERSEN;\n\nreturn [{ json: { ...r, otomatis } }];"
+      },
+      "id": "aturan",
+      "name": "Aturan Delegasi",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "if-auto-c",
+              "leftValue": "={{ $json.otomatis }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-auto",
+      "name": "Dalam Batas Otomatis?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "id",
+              "value": "={{ $('Normalisasi Approval').first().json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "jenis",
+              "value": "={{ $('Normalisasi Approval').first().json.jenis }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "pemohon",
+              "value": "={{ $('Normalisasi Approval').first().json.pemohon }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "jumlah",
+              "value": "={{ $('Normalisasi Approval').first().json.jumlah }}",
+              "type": "number"
+            },
+            {
+              "id": "5",
+              "name": "alasan",
+              "value": "={{ $('Normalisasi Approval').first().json.alasan }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "status",
+              "value": "disetujui",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "diputuskan_oleh",
+              "value": "aturan otomatis",
+              "type": "string"
+            },
+            {
+              "id": "8",
+              "name": "waktu",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "k-auto",
+      "name": "Keputusan Otomatis",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1340,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 700, system: \"Anda adalah penasihat keuangan dan risiko untuk CEO toko online. Nilai satu permintaan persetujuan (diskon, pengeluaran, atau refund). Balas HANYA JSON valid tanpa teks lain dengan kunci: rekomendasi (setujui | tolak | perlu_info), risiko (rendah | sedang | tinggi), alasan (maks 30 kata, bahasa Indonesia), pertanyaan_lanjutan (maks 20 kata, boleh kosong).\", messages: [{ role: 'user', content: JSON.stringify($json) }] }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "ai-risk",
+      "name": "AI Penilai Risiko",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GANTI",
+          "name": "Anthropic API Key (header x-api-key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const raw = $input.first().json.content?.[0]?.text || '{}';\nlet ai;\ntry {\n  ai = JSON.parse(raw.replace(/```json|```/g, '').trim());\n} catch (e) {\n  ai = { rekomendasi: 'perlu_info', risiko: 'sedang', alasan: 'Analisis AI gagal dibaca, tinjau manual.', pertanyaan_lanjutan: '' };\n}\nconst r = $('Aturan Delegasi').first().json;\nconst rp = n => 'Rp ' + Number(n).toLocaleString('id-ID');\nconst detail = r.jenis === 'diskon' ? `Diskon: ${r.diskon_persen}%` : `Jumlah: ${rp(r.jumlah)}`;\nconst pesan = [\n  '🔔 PERSETUJUAN DIBUTUHKAN',\n  '',\n  `ID: ${r.id}`,\n  `Jenis: ${r.jenis}`,\n  `Pemohon: ${r.pemohon}`,\n  detail,\n  `Alasan pemohon: ${r.alasan || '-'}`,\n  '',\n  `Saran AI: ${String(ai.rekomendasi).toUpperCase()} (risiko ${ai.risiko})`,\n  `Catatan: ${ai.alasan}`,\n  ai.pertanyaan_lanjutan ? `Perlu ditanyakan: ${ai.pertanyaan_lanjutan}` : ''\n].filter(x => x !== null).join('\\n');\nreturn [{ json: { ...r, ...ai, pesan_ceo: pesan } }];"
+      },
+      "id": "olah-risk",
+      "name": "Olah Rekomendasi",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "GANTI_CHAT_ID_CEO",
+        "message": "={{ $json.pesan_ceo }}",
+        "responseType": "approval",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "✅ Setujui",
+            "disapproveLabel": "❌ Tolak"
+          }
+        },
+        "options": {}
+      },
+      "id": "tg-approve",
+      "name": "Tanya CEO",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1780,
+        400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "GANTI",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "if-ceo-c",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-ceo",
+      "name": "CEO Setuju?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "id",
+              "value": "={{ $('Normalisasi Approval').first().json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "jenis",
+              "value": "={{ $('Normalisasi Approval').first().json.jenis }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "pemohon",
+              "value": "={{ $('Normalisasi Approval').first().json.pemohon }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "jumlah",
+              "value": "={{ $('Normalisasi Approval').first().json.jumlah }}",
+              "type": "number"
+            },
+            {
+              "id": "5",
+              "name": "alasan",
+              "value": "={{ $('Normalisasi Approval').first().json.alasan }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "status",
+              "value": "disetujui",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "diputuskan_oleh",
+              "value": "CEO",
+              "type": "string"
+            },
+            {
+              "id": "8",
+              "name": "waktu",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "k-ya",
+      "name": "Disetujui CEO",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2220,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "id",
+              "value": "={{ $('Normalisasi Approval').first().json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "jenis",
+              "value": "={{ $('Normalisasi Approval').first().json.jenis }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "pemohon",
+              "value": "={{ $('Normalisasi Approval').first().json.pemohon }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "jumlah",
+              "value": "={{ $('Normalisasi Approval').first().json.jumlah }}",
+              "type": "number"
+            },
+            {
+              "id": "5",
+              "name": "alasan",
+              "value": "={{ $('Normalisasi Approval').first().json.alasan }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "status",
+              "value": "ditolak",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "diputuskan_oleh",
+              "value": "CEO",
+              "type": "string"
+            },
+            {
+              "id": "8",
+              "name": "waktu",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "k-tidak",
+      "name": "Ditolak CEO",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2220,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GANTI_ID_GOOGLE_SHEET"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Keputusan"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "catat",
+      "name": "Catat Keputusan",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2460,
+        280
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Normalisasi Approval').first().json.callback_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-secret",
+              "value": "={{ $env.N8N_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ id: $json.id, status: $json.status, diputuskan_oleh: $json.diputuskan_oleh, waktu: $json.waktu }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "callback",
+      "name": "Kirim Callback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2460,
+        460
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Jam 07:00 Pagi": {
+      "main": [
+        [
+          {
+            "node": "Baca Leads",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Baca Pesanan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baca Leads": {
+      "main": [
+        [
+          {
+            "node": "Gabung Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baca Pesanan": {
+      "main": [
+        [
+          {
+            "node": "Gabung Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Gabung Data": {
+      "main": [
+        [
+          {
+            "node": "Hitung KPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hitung KPI": {
+      "main": [
+        [
+          {
+            "node": "AI Briefing CEO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Briefing CEO": {
+      "main": [
+        [
+          {
+            "node": "Kirim Briefing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Persetujuan": {
+      "main": [
+        [
+          {
+            "node": "Cek Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cek Secret": {
+      "main": [
+        [
+          {
+            "node": "Balas 200",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Balas 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Balas 200": {
+      "main": [
+        [
+          {
+            "node": "Normalisasi Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisasi Approval": {
+      "main": [
+        [
+          {
+            "node": "Aturan Delegasi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aturan Delegasi": {
+      "main": [
+        [
+          {
+            "node": "Dalam Batas Otomatis?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dalam Batas Otomatis?": {
+      "main": [
+        [
+          {
+            "node": "Keputusan Otomatis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Penilai Risiko",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Penilai Risiko": {
+      "main": [
+        [
+          {
+            "node": "Olah Rekomendasi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Olah Rekomendasi": {
+      "main": [
+        [
+          {
+            "node": "Tanya CEO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tanya CEO": {
+      "main": [
+        [
+          {
+            "node": "CEO Setuju?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CEO Setuju?": {
+      "main": [
+        [
+          {
+            "node": "Disetujui CEO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ditolak CEO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keputusan Otomatis": {
+      "main": [
+        [
+          {
+            "node": "Catat Keputusan",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Kirim Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disetujui CEO": {
+      "main": [
+        [
+          {
+            "node": "Catat Keputusan",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Kirim Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ditolak CEO": {
+      "main": [
+        [
+          {
+            "node": "Catat Keputusan",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Kirim Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jakarta"
+  },
+  "pinData": {},
+  "tags": []
+}

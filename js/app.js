@@ -159,24 +159,35 @@ function initVirtualOffice() {
   const container = document.getElementById('canvas-container');
   if (!container) return;
 
-  virtualOffice = new VirtualOffice({
-    container,
-    theme: state.theme,
-    onZoneEnter: (zone) => {
-      state.currentNearbyZone = zone;
-      showInteractionPrompt(zone);
-      highlightNavPill(zone.id);
-    },
-    onZoneLeave: (zone) => {
-      if (state.currentNearbyZone && state.currentNearbyZone.id === zone.id) {
-        state.currentNearbyZone = null;
-        hideInteractionPrompt();
+  try {
+    virtualOffice = new VirtualOffice({
+      container,
+      theme: state.theme,
+      onZoneEnter: (zone) => {
+        state.currentNearbyZone = zone;
+        showInteractionPrompt(zone);
+        highlightNavPill(zone.id);
+      },
+      onZoneLeave: (zone) => {
+        if (state.currentNearbyZone && state.currentNearbyZone.id === zone.id) {
+          state.currentNearbyZone = null;
+          hideInteractionPrompt();
+        }
+      },
+      onMinimapUpdate: (data) => {
+        drawMinimap(data);
       }
-    },
-    onMinimapUpdate: (data) => {
-      drawMinimap(data);
+    });
+  } catch (err) {
+    console.error('Failed to initialize 3D Virtual Showroom:', err);
+    state.activeMode = '2d';
+    const view3D = document.getElementById('canvas-container');
+    const view2D = document.getElementById('view-2d-container');
+    if (view3D && view2D) {
+      view3D.style.display = 'none';
+      view2D.classList.add('active');
     }
-  });
+  }
 }
 
 // 2. Theme Switcher (Cerah / Gelap)
@@ -274,7 +285,7 @@ function initHUD() {
       if (state.activeMode === '2d') {
         const el = document.getElementById(`sec-2d-${targetZone}`);
         if (el) el.scrollIntoView({ behavior: 'smooth' });
-      } else {
+      } else if (virtualOffice) {
         virtualOffice.teleportTo(targetZone);
       }
     });

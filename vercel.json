@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "routes": [
+    {
+      "src": "/js/(.*)",
+      "headers": {
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      },
+      "dest": "/js/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "headers": {
+        "Content-Type": "text/css; charset=utf-8"
+      },
+      "dest": "/css/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
