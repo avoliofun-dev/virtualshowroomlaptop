@@ -1,12 +1,12 @@
 :root {
-  /* Dark Mode Palette (Default) */
-  --bg-dark: #07090e;
-  --bg-secondary: #0d121f;
-  --bg-card: rgba(16, 22, 34, 0.85);
-  --bg-card-hover: rgba(26, 36, 56, 0.95);
-  --bg-glass: rgba(255, 255, 255, 0.05);
-  --border-glass: rgba(255, 255, 255, 0.12);
-  --border-glow: rgba(0, 242, 254, 0.4);
+  /* Modern Cyber Showroom Palette (Default) */
+  --bg-dark: #111625;
+  --bg-secondary: #1a2236;
+  --bg-card: rgba(22, 30, 48, 0.88);
+  --bg-card-hover: rgba(30, 42, 68, 0.96);
+  --bg-glass: rgba(255, 255, 255, 0.08);
+  --border-glass: rgba(255, 255, 255, 0.16);
+  --border-glow: rgba(0, 242, 254, 0.45);
   
   --primary: #00f2fe;
   --primary-glow: rgba(0, 242, 254, 0.25);

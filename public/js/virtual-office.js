@@ -120,6 +120,16 @@ export class VirtualOffice {
     const height = this.container.clientHeight || window.innerHeight || 720;
     const aspect = width / (height || 1);
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 250);
+    // Explicit initial camera position to prevent starting at black (0,0,0) inside the floor!
+    const initTheta = this.cameraTheta;
+    const initPhi = this.cameraPhi;
+    const initDist = this.cameraDistance;
+    this.camera.position.set(
+      initDist * Math.sin(initPhi) * Math.sin(initTheta),
+      1.3 + initDist * Math.cos(initPhi),
+      16 + initDist * Math.sin(initPhi) * Math.cos(initTheta)
+    );
+    this.camera.lookAt(0, 1.3, 16);
 
     // 3. Renderer with robust device compatibility fallback
     let renderer;
@@ -183,10 +193,10 @@ export class VirtualOffice {
   setupThemeColors() {
     if (this.theme === 'light') {
       this.scene.background = new THREE.Color(0xf1f5f9);
-      this.scene.fog = new THREE.FogExp2(0xf1f5f9, 0.012);
+      this.scene.fog = new THREE.FogExp2(0xf1f5f9, 0.005);
     } else {
-      this.scene.background = new THREE.Color(0x07090e);
-      this.scene.fog = new THREE.FogExp2(0x07090e, 0.018);
+      this.scene.background = new THREE.Color(0x131926); // Bright luminous cyber navy
+      this.scene.fog = new THREE.FogExp2(0x131926, 0.004); // Gentle atmospheric depth (no dark void!)
     }
   }
 
@@ -197,56 +207,70 @@ export class VirtualOffice {
       if (this.scene.fog) this.scene.fog.color.set(0xf1f5f9);
       if (this.floorMat) {
         this.floorMat.color.set(0xf8fafc);
-        this.floorMat.roughness = 0.35;
-        this.floorMat.metalness = 0.2;
+        this.floorMat.roughness = 0.22;
+        this.floorMat.metalness = 0.15;
       }
-      if (this.ambientLight) this.ambientLight.intensity = 1.15;
-      if (this.dirLight) this.dirLight.intensity = 1.25;
+      if (this.ambientLight) this.ambientLight.intensity = 1.6;
+      if (this.dirLight) this.dirLight.intensity = 1.8;
+      if (this.fillLight) this.fillLight.intensity = 0.8;
       if (this.gridHelper) this.gridHelper.visible = false;
     } else {
-      this.scene.background.set(0x07090e);
-      if (this.scene.fog) this.scene.fog.color.set(0x07090e);
+      this.scene.background.set(0x131926);
+      if (this.scene.fog) this.scene.fog.color.set(0x131926);
       if (this.floorMat) {
-        this.floorMat.color.set(0x0d121d);
-        this.floorMat.roughness = 0.25;
-        this.floorMat.metalness = 0.6;
+        this.floorMat.color.set(0x1e2738); // Elegant polished showroom floor
+        this.floorMat.roughness = 0.20;
+        this.floorMat.metalness = 0.65;
       }
-      if (this.ambientLight) this.ambientLight.intensity = 0.65;
-      if (this.dirLight) this.dirLight.intensity = 0.95;
+      if (this.ambientLight) this.ambientLight.intensity = 1.45;
+      if (this.dirLight) this.dirLight.intensity = 1.65;
+      if (this.fillLight) this.fillLight.intensity = 0.95;
       if (this.gridHelper) this.gridHelper.visible = true;
     }
   }
 
   setupLighting() {
-    this.ambientLight = new THREE.AmbientLight(0xffffff, this.theme === 'light' ? 1.15 : 0.65);
+    // 1. High-illumination Ambient Light (ensures all characters are clearly visible)
+    this.ambientLight = new THREE.AmbientLight(0xffffff, this.theme === 'light' ? 1.6 : 1.45);
     this.scene.add(this.ambientLight);
 
-    this.dirLight = new THREE.DirectionalLight(0xfff8ee, this.theme === 'light' ? 1.25 : 0.95);
-    this.dirLight.position.set(18, 30, 22);
+    // 2. Main Studio Directional Sun/Key Light
+    this.dirLight = new THREE.DirectionalLight(0xfff8ee, this.theme === 'light' ? 1.8 : 1.65);
+    this.dirLight.position.set(18, 34, 22);
     this.dirLight.castShadow = true;
     this.dirLight.shadow.mapSize.width = 1024;
     this.dirLight.shadow.mapSize.height = 1024;
     this.dirLight.shadow.camera.near = 0.5;
     this.dirLight.shadow.camera.far = 100;
-    const d = 30;
+    const d = 32;
     this.dirLight.shadow.camera.left = -d;
     this.dirLight.shadow.camera.right = d;
     this.dirLight.shadow.camera.top = d;
     this.dirLight.shadow.camera.bottom = -d;
     this.scene.add(this.dirLight);
 
-    this.centerGlow = new THREE.PointLight(0x00f2fe, 1.2, 60);
-    this.centerGlow.position.set(0, 12, 0);
+    // 3. Fill Light (illuminates front of avatars and eliminates dark shadows)
+    this.fillLight = new THREE.DirectionalLight(0x00f2fe, 0.95);
+    this.fillLight.position.set(-18, 26, -20);
+    this.scene.add(this.fillLight);
+
+    // 4. Center Showroom Chandelier Downlight
+    this.centerGlow = new THREE.PointLight(0xffffff, 2.4, 75);
+    this.centerGlow.position.set(0, 14, 0);
     this.scene.add(this.centerGlow);
+
+    // 5. Hemisphere Ambient Reflection
+    this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.85);
+    this.scene.add(this.hemiLight);
   }
 
   buildOfficeArchitecture() {
-    // Floor
+    // Floor: Luminous reflective showroom floor
     const floorGeo = new THREE.PlaneGeometry(64, 64);
     this.floorMat = new THREE.MeshStandardMaterial({
-      color: this.theme === 'light' ? 0xf8fafc : 0x0d121d,
-      roughness: 0.25,
-      metalness: 0.6
+      color: this.theme === 'light' ? 0xf8fafc : 0x1e2738,
+      roughness: 0.20,
+      metalness: 0.65
     });
     this.floor = new THREE.Mesh(floorGeo, this.floorMat);
     this.floor.rotation.x = -Math.PI / 2;
@@ -318,9 +342,9 @@ export class VirtualOffice {
       disk.position.set(def.position.x, 0.03, def.position.z);
       this.scene.add(disk);
 
-      // Spot light over zone
-      const spot = new THREE.SpotLight(def.color, 2.8, 24, Math.PI / 4, 0.6);
-      spot.position.set(def.position.x, 10, def.position.z);
+      // Spot light over zone (bright, crisp illumination)
+      const spot = new THREE.SpotLight(def.color, 4.2, 30, Math.PI / 3.8, 0.4);
+      spot.position.set(def.position.x, 12, def.position.z);
       spot.target.position.set(def.position.x, 0, def.position.z);
       this.scene.add(spot);
       this.scene.add(spot.target);
