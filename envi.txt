@@ -8,7 +8,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 
 # 2. n8n Automation Engine (Konsep 3 - Luna AI Sales Assistant)
 # URL Webhook trigger n8n untuk alur kerja asisten penjualan
-N8N_LUNA_WEBHOOK_URL=http://127.0.0.1:5678/webhook/ekalaya-ai
+N8N_LUNA_WEBHOOK_URL=https://n8n-production-82f8.up.railway.app/workflow/nQy87n5q0DitASvK
 N8N_WEBHOOK_SECRET=your_n8n_webhook_secret_key
 
 # 3. Cloud LLM Providers (Opsional, Fallback Otomatis ke Basis Pengetahuan Grounded)

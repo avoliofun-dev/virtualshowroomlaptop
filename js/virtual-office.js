@@ -6,12 +6,15 @@ export class VirtualOffice {
     this.onZoneEnter = options.onZoneEnter || (() => {});
     this.onZoneLeave = options.onZoneLeave || (() => {});
     this.onMinimapUpdate = options.onMinimapUpdate || (() => {});
+    this.onFootstep = options.onFootstep || (() => {});
     this.theme = options.theme || 'dark'; // 'dark' | 'light'
     
     // Scene state
     this.zones = [];
     this.floatingItems = [];
     this.laptopMeshes = [];
+    this.npcVisitors = [];
+    this.stepped = false;
     this.currentZone = null;
     this.clock = new THREE.Clock();
     
@@ -152,6 +155,9 @@ export class VirtualOffice {
 
     // 7. Player Avatar
     this.buildPlayer();
+
+    // 7B. Live NPC Visitors (Tahap 5 Showroom Simulation)
+    this.buildNPCVisitors();
 
     // 8. Event Listeners for Orbit, Pan, Zoom, and Movement
     this.setupInputListeners();
@@ -1089,6 +1095,15 @@ export class VirtualOffice {
 
       const stride = Math.sin(this.walkCycle) * 0.78;
 
+      // Footstep audio trigger synchronized with walking stride
+      if (stride > 0.65 && !this.stepped) {
+        this.stepped = true;
+        if (this.onFootstep) this.onFootstep();
+      } else if (stride < -0.65 && this.stepped) {
+        this.stepped = false;
+        if (this.onFootstep) this.onFootstep();
+      }
+
       // Legs swing back & forth from hips
       if (this.leftLeg && this.rightLeg) {
         this.leftLeg.rotation.x = stride;
@@ -1218,6 +1233,284 @@ export class VirtualOffice {
     });
 
     this.updatePlayerPhysics(delta);
+    this.updateNPCVisitors(delta);
     this.renderer.render(this.scene, this.camera);
+  }
+
+  // ==========================================================================
+  // Tahap 5: Autonomous NPC Live Visitors (Ghost Visitors in Showroom)
+  // ==========================================================================
+  createNPCModel(config) {
+    const group = new THREE.Group();
+    const skinMat = new THREE.MeshStandardMaterial({ color: config.skinColor || 0xfed19e, roughness: 0.5 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: config.hairColor || 0x241812, roughness: 0.8 });
+    const jacketMat = new THREE.MeshStandardMaterial({ color: config.jacketColor || 0x1e293b, roughness: 0.4 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: config.pantsColor || 0x334155, roughness: 0.6 });
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const blackMat = new THREE.MeshBasicMaterial({ color: 0x09090b });
+    const accentMat = new THREE.MeshBasicMaterial({ color: config.accentColor || 0x00f2fe });
+
+    const meshContainer = new THREE.Group();
+    group.add(meshContainer);
+
+    // Torso Block
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.54, 0.25), jacketMat);
+    torso.position.set(0, 0.82, 0);
+    torso.castShadow = true;
+    meshContainer.add(torso);
+
+    // Head Group
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.12, 0);
+    meshContainer.add(headGroup);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.36, 0.36), skinMat);
+    head.position.set(0, 0.18, 0);
+    head.castShadow = true;
+    headGroup.add(head);
+
+    // Eyes
+    const leftEye = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.01), blackMat);
+    leftEye.position.set(-0.08, 0.18, 0.181);
+    headGroup.add(leftEye);
+
+    const rightEye = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.01), blackMat);
+    rightEye.position.set(0.08, 0.18, 0.181);
+    headGroup.add(rightEye);
+
+    // Hair
+    const hair = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.12, 0.38), hairMat);
+    hair.position.set(0, 0.32, 0);
+    headGroup.add(hair);
+
+    // Headset
+    if (config.hasHeadset) {
+      const band = new THREE.Mesh(new THREE.BoxGeometry(0.41, 0.04, 0.08), blackMat);
+      band.position.set(0, 0.38, 0);
+      headGroup.add(band);
+      const earcup = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.13, 0.11), accentMat);
+      earcup.position.set(-0.20, 0.18, 0);
+      headGroup.add(earcup);
+      const earcupR = earcup.clone();
+      earcupR.position.x = 0.20;
+      headGroup.add(earcupR);
+    }
+
+    // Left Arm
+    const leftArm = new THREE.Group();
+    leftArm.position.set(-0.35, 1.05, 0);
+    leftArm.rotation.z = 0.10;
+    meshContainer.add(leftArm);
+    const lSleeve = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.36, 0.20), jacketMat);
+    lSleeve.position.set(0, -0.18, 0);
+    lSleeve.castShadow = true;
+    leftArm.add(lSleeve);
+    const lHand = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.15, 0.18), skinMat);
+    lHand.position.set(0, -0.42, 0);
+    leftArm.add(lHand);
+
+    // Right Arm
+    const rightArm = new THREE.Group();
+    rightArm.position.set(0.35, 1.05, 0);
+    rightArm.rotation.z = -0.10;
+    meshContainer.add(rightArm);
+    const rSleeve = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.36, 0.20), jacketMat);
+    rSleeve.position.set(0, -0.18, 0);
+    rSleeve.castShadow = true;
+    rightArm.add(rSleeve);
+    const rHand = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.15, 0.18), skinMat);
+    rHand.position.set(0, -0.42, 0);
+    rightArm.add(rHand);
+
+    // Left Leg
+    const leftLeg = new THREE.Group();
+    leftLeg.position.set(-0.13, 0.54, 0);
+    meshContainer.add(leftLeg);
+    const lPants = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.42, 0.22), pantsMat);
+    lPants.position.set(0, -0.21, 0);
+    lPants.castShadow = true;
+    leftLeg.add(lPants);
+    const lShoe = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.11, 0.24), whiteMat);
+    lShoe.position.set(0, -0.48, 0.005);
+    leftLeg.add(lShoe);
+
+    // Right Leg
+    const rightLeg = new THREE.Group();
+    rightLeg.position.set(0.13, 0.54, 0);
+    meshContainer.add(rightLeg);
+    const rPants = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.42, 0.22), pantsMat);
+    rPants.position.set(0, -0.21, 0);
+    rPants.castShadow = true;
+    rightLeg.add(rPants);
+    const rShoe = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.11, 0.24), whiteMat);
+    rShoe.position.set(0, -0.48, 0.005);
+    rightLeg.add(rShoe);
+
+    // 3D Canvas Billboard Sprite for Overhead Nameplate
+    const nameCanvas = document.createElement('canvas');
+    nameCanvas.width = 256;
+    nameCanvas.height = 64;
+    const ctx = nameCanvas.getContext('2d');
+    ctx.fillStyle = 'rgba(7, 9, 14, 0.85)';
+    ctx.roundRect ? ctx.roundRect(8, 8, 240, 48, 24) : ctx.rect(8, 8, 240, 48);
+    ctx.fill();
+    ctx.strokeStyle = config.badgeColor || '#00f2fe';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Green pulse dot in billboard
+    ctx.beginPath();
+    ctx.arc(32, 32, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#10b981';
+    ctx.fill();
+
+    // Name text
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(config.name, 48, 38);
+
+    const nameTex = new THREE.CanvasTexture(nameCanvas);
+    nameTex.minFilter = THREE.LinearFilter;
+    const spriteMat = new THREE.SpriteMaterial({ map: nameTex, transparent: true });
+    const nameSprite = new THREE.Sprite(spriteMat);
+    nameSprite.position.set(0, 1.85, 0);
+    nameSprite.scale.set(1.5, 0.38, 1);
+    group.add(nameSprite);
+
+    return {
+      group,
+      meshContainer,
+      leftArm,
+      rightArm,
+      leftLeg,
+      rightLeg,
+      headGroup
+    };
+  }
+
+  buildNPCVisitors() {
+    this.npcVisitors = [];
+    const npcConfigs = [
+      {
+        name: 'Budi (Gamer)',
+        role: 'ROG Enthusiast',
+        badgeColor: '#ff0055',
+        jacketColor: 0x991b1b,
+        hairColor: 0x241812,
+        accentColor: 0xff0055,
+        hasHeadset: true,
+        startPos: { x: -10, z: -2 },
+        waypoints: [
+          { x: -10, z: -2 },
+          { x: -7, z: 2 },
+          { x: -12, z: 4 },
+          { x: -8, z: -3 }
+        ]
+      },
+      {
+        name: 'Clarissa (Creator)',
+        role: 'Studio Pro',
+        badgeColor: '#a855f7',
+        jacketColor: 0x1e3a8a,
+        hairColor: 0x5c3a21,
+        accentColor: 0x00f2fe,
+        hasHeadset: false,
+        startPos: { x: 10, z: -4 },
+        waypoints: [
+          { x: 10, z: -4 },
+          { x: 13, z: 0 },
+          { x: 9, z: 3 },
+          { x: 12, z: -2 }
+        ]
+      },
+      {
+        name: 'Dimas Aditya',
+        role: 'Visitor',
+        badgeColor: '#00f59b',
+        jacketColor: 0x334155,
+        hairColor: 0xd4c2a5,
+        accentColor: 0x00f59b,
+        hasHeadset: false,
+        startPos: { x: 0, z: 8 },
+        waypoints: [
+          { x: 0, z: 8 },
+          { x: -4, z: 10 },
+          { x: 4, z: 9 },
+          { x: 0, z: 12 }
+        ]
+      }
+    ];
+
+    npcConfigs.forEach(cfg => {
+      const npcModel = this.createNPCModel(cfg);
+      npcModel.group.position.set(cfg.startPos.x, 0, cfg.startPos.z);
+      this.scene.add(npcModel.group);
+
+      this.npcVisitors.push({
+        ...npcModel,
+        config: cfg,
+        waypoints: cfg.waypoints,
+        currentWpIdx: 0,
+        waitTime: 2.0 + Math.random() * 3.0,
+        isWaiting: true,
+        walkCycle: Math.random() * Math.PI,
+        speed: 2.6
+      });
+    });
+  }
+
+  updateNPCVisitors(delta) {
+    if (!this.npcVisitors) return;
+
+    this.npcVisitors.forEach(npc => {
+      const targetWp = npc.waypoints[npc.currentWpIdx];
+
+      if (npc.isWaiting) {
+        npc.waitTime -= delta;
+        // Idle limb return
+        npc.leftLeg.rotation.x = THREE.MathUtils.lerp(npc.leftLeg.rotation.x, 0, 0.1);
+        npc.rightLeg.rotation.x = THREE.MathUtils.lerp(npc.rightLeg.rotation.x, 0, 0.1);
+        npc.leftArm.rotation.x = THREE.MathUtils.lerp(npc.leftArm.rotation.x, 0, 0.1);
+        npc.rightArm.rotation.x = THREE.MathUtils.lerp(npc.rightArm.rotation.x, 0, 0.1);
+        npc.headGroup.rotation.y = Math.sin(this.clock.getElapsedTime() * 1.2 + npc.currentWpIdx) * 0.15;
+
+        if (npc.waitTime <= 0) {
+          npc.isWaiting = false;
+          npc.currentWpIdx = (npc.currentWpIdx + 1) % npc.waypoints.length;
+        }
+        return;
+      }
+
+      // Move toward waypoint
+      const dx = targetWp.x - npc.group.position.x;
+      const dz = targetWp.z - npc.group.position.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+
+      if (dist < 0.4) {
+        npc.isWaiting = true;
+        npc.waitTime = 3.5 + Math.random() * 4.0;
+        return;
+      }
+
+      // Rotate toward target
+      const targetAngle = Math.atan2(dx, dz);
+      let diff = targetAngle - npc.group.rotation.y;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      npc.group.rotation.y += diff * Math.min(delta * 5.0, 1.0);
+
+      // Move forward
+      const moveDist = Math.min(npc.speed * delta, dist);
+      npc.group.position.x += Math.sin(npc.group.rotation.y) * moveDist;
+      npc.group.position.z += Math.cos(npc.group.rotation.y) * moveDist;
+
+      // Animate walking limbs
+      npc.walkCycle += delta * npc.speed * 4.2;
+      const stride = Math.sin(npc.walkCycle) * 0.65;
+      npc.leftLeg.rotation.x = stride;
+      npc.rightLeg.rotation.x = -stride;
+      npc.leftArm.rotation.x = -stride * 0.7;
+      npc.rightArm.rotation.x = stride * 0.7;
+    });
   }
 }

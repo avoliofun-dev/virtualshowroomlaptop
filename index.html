@@ -40,6 +40,12 @@
           <span id="countdown-timer" class="countdown-box">04:28:15</span>
           <span style="opacity: 0.85;">Diskon s/d 35%</span>
         </div>
+
+        <!-- Live Visitors Presence Counter (Tahap 5) -->
+        <div id="live-visitors-badge" class="live-visitors-badge glass-panel" title="Pengunjung aktif di showroom saat ini">
+          <span class="live-dot-pulse"></span>
+          <span id="live-visitor-text">👥 4 Pengunjung Online</span>
+        </div>
       </div>
 
       <!-- Fast Travel Room Navigation Pills -->
@@ -120,7 +126,19 @@
           <span class="dock-tooltip">Cari Spek</span>
         </button>
 
-        <!-- 8. Main CTA Konsultasi (Paling Atas) -->
+        <!-- 8. Komparasi Head-to-Head 2 Laptop (Tahap 5) -->
+        <button id="btn-compare-dock" class="action-btn-circle" title="Komparasi Head-to-Head 2 Laptop">
+          <span>⚖️</span>
+          <span class="dock-tooltip">Komparasi Laptop</span>
+        </button>
+
+        <!-- 9. 3D Laptop Inspector 360° (Tahap 5) -->
+        <button id="btn-inspect-dock" class="action-btn-circle" title="Inspeksi Laptop 3D 360°">
+          <span>🔍</span>
+          <span class="dock-tooltip">Inspeksi 3D</span>
+        </button>
+
+        <!-- 10. Main CTA Konsultasi (Paling Atas) -->
         <button id="btn-header-cta" class="action-btn-circle btn-cta-dock" title="Konsultasi Pembelian">
           <span>🛒</span>
           <span class="dock-tooltip">Konsultasi</span>
@@ -285,12 +303,20 @@
           </div>
           <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Core i9-14900HX • RTX 4080 12GB • 32GB DDR5 • 240Hz QHD+</div>
           <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 28.500.000</div>
-          <div style="display: flex; gap: 6px;">
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
             <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('rog')">
               ⚡ Beli Sekarang
             </button>
             <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20ROG%20Titan%20X%20Pro')">
               Tanya WA
+            </button>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(0, 242, 254, 0.4);" onclick="openLaptopInspector('rog')">
+              🔍 Inspeksi 3D 360°
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(245, 158, 11, 0.4);" onclick="openLaptopCompareModal('rog', 'macbook')">
+              ⚖️ Komparasi
             </button>
           </div>
         </div>
@@ -303,12 +329,20 @@
           </div>
           <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Core Ultra 7 AI • 16GB RAM • 1TB SSD • 2.8K OLED • 1.1kg</div>
           <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 16.900.000</div>
-          <div style="display: flex; gap: 6px;">
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
             <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('zenbook')">
               ⚡ Beli Sekarang
             </button>
             <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20ZenAir%20OLED%2014')">
               Tanya WA
+            </button>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(0, 242, 254, 0.4);" onclick="openLaptopInspector('zenbook')">
+              🔍 Inspeksi 3D 360°
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(245, 158, 11, 0.4);" onclick="openLaptopCompareModal('zenbook', 'swift')">
+              ⚖️ Komparasi
             </button>
           </div>
         </div>
@@ -321,12 +355,20 @@
           </div>
           <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Apple M3 Max 14-Core • 36GB Unified RAM • 1TB SSD • XDR Display</div>
           <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 34.900.000</div>
-          <div style="display: flex; gap: 6px;">
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
             <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('macbook')">
               ⚡ Beli Sekarang
             </button>
             <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20MacBook%20Pro%20M3%20Max')">
               Tanya WA
+            </button>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(0, 242, 254, 0.4);" onclick="openLaptopInspector('macbook')">
+              🔍 Inspeksi 3D 360°
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(245, 158, 11, 0.4);" onclick="openLaptopCompareModal('macbook', 'rog')">
+              ⚖️ Komparasi
             </button>
           </div>
         </div>
@@ -339,12 +381,20 @@
           </div>
           <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Ryzen 5 7530U • 16GB RAM • 512GB SSD • 100% sRGB • Baterai 12 Jam</div>
           <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 7.800.000</div>
-          <div style="display: flex; gap: 6px;">
+          <div style="display: flex; gap: 6px; margin-bottom: 6px;">
             <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('swift')">
               ⚡ Beli Sekarang
             </button>
             <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20Swift%20Go%2014')">
               Tanya WA
+            </button>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(0, 242, 254, 0.4);" onclick="openLaptopInspector('swift')">
+              🔍 Inspeksi 3D 360°
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.72rem; padding: 5px; border-color: rgba(245, 158, 11, 0.4);" onclick="openLaptopCompareModal('swift', 'zenbook')">
+              ⚖️ Komparasi
             </button>
           </div>
         </div>
@@ -941,6 +991,178 @@
 
         <div id="settings-status" class="form-status"></div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal 10: 3D Laptop Inspection Studio 360° (Tahap 5) -->
+  <div id="modal-laptop-inspector" class="modal-overlay">
+    <div class="modal-box glass-panel modal-wide" style="max-width: 960px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <span class="spec-chip" style="background: rgba(0, 242, 254, 0.2); color: var(--primary);">Studio Inspeksi 3D Interaktif 360°</span>
+            <h2 id="inspector-modal-title">🔍 ROG Titan X Pro — 3D Viewer</h2>
+            <p>Putar 360° dengan mouse/touch, sesuaikan sudut engsel layar, ubah warna body, dan aktifkan pencahayaan RGB.</p>
+          </div>
+          <button id="btn-inspector-checkout" class="btn-submit" style="padding: 10px 20px; font-size: 0.88rem;">
+            🛒 Beli Unit Ini Sekarang
+          </button>
+        </div>
+      </div>
+
+      <div class="inspector-grid">
+        <!-- 3D Canvas Box -->
+        <div class="inspector-canvas-box">
+          <div id="inspector-canvas-container" class="inspector-canvas"></div>
+          <div class="inspector-orbit-hint">
+            <span>🖱️ Drag Mouse / Sentuh Layar untuk Putar 360° • Scroll untuk Zoom</span>
+          </div>
+          <!-- Interactive Hotspot Pins -->
+          <div class="inspector-hotspots-bar">
+            <button class="hotspot-chip active" data-part="screen">🖥️ Layar 240Hz</button>
+            <button class="hotspot-chip" data-part="keyboard">⌨️ Keyboard RGB</button>
+            <button class="hotspot-chip" data-part="cooling">❄️ Vapor Chamber</button>
+            <button class="hotspot-chip" data-part="ports">⚡ Thunderbolt 4</button>
+          </div>
+        </div>
+
+        <!-- Controls Sidebar -->
+        <div class="inspector-sidebar glass-panel">
+          <!-- Model Selector -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">PILIH MODEL LAPTOP</label>
+            <select id="inspector-model-select" class="form-control" style="font-size: 0.85rem; padding: 8px 12px;">
+              <option value="rog">ROG Titan X Pro (Gaming Beast)</option>
+              <option value="zenbook">ZenAir OLED 14 (Ultra Slim)</option>
+              <option value="macbook">MacBook Pro Studio M3 Max</option>
+              <option value="swift">Swift Go 14 (Best Value)</option>
+            </select>
+          </div>
+
+          <!-- Screen Hinge Angle Slider -->
+          <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">SUDUT BUKA LAYAR (ENGSEL)</label>
+              <span id="hinge-angle-val" style="font-size: 0.8rem; font-weight: 800; color: var(--primary);">115°</span>
+            </div>
+            <input type="range" id="hinge-angle-slider" min="0" max="145" value="115" style="width: 100%; accent-color: var(--primary); cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-muted); margin-top: 4px;">
+              <span>0° (Tertutup)</span>
+              <span>115° (Normal)</span>
+              <span>145° (Maksimal)</span>
+            </div>
+          </div>
+
+          <!-- Colorway Switcher -->
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">PILIHAN WARNA BODY (CHASSIS)</label>
+            <div class="colorway-grid">
+              <button class="colorway-btn active" data-color="stealth" title="Stealth Phantom Black">
+                <span class="color-dot" style="background: #181920;"></span>
+                <span>Stealth Black</span>
+              </button>
+              <button class="colorway-btn" data-color="silver" title="Celestial Platinum Silver">
+                <span class="color-dot" style="background: #d1d5db;"></span>
+                <span>Platinum Silver</span>
+              </button>
+              <button class="colorway-btn" data-color="blue" title="Midnight Deep Blue">
+                <span class="color-dot" style="background: #1e3a8a;"></span>
+                <span>Midnight Blue</span>
+              </button>
+              <button class="colorway-btn" data-color="purple" title="Cyberpunk Purple">
+                <span class="color-dot" style="background: #581c87;"></span>
+                <span>Cyber Purple</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- RGB Backlight Modes -->
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px;">PENCAHAYAAN KEYBOARD BACKLIGHT</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <button class="rgb-mode-btn active" data-rgb="cyan">⚡ Cyber Cyan</button>
+              <button class="rgb-mode-btn" data-rgb="rainbow">🌈 Spectrum RGB</button>
+              <button class="rgb-mode-btn" data-rgb="crimson">🔥 ROG Crimson</button>
+              <button class="rgb-mode-btn" data-rgb="off">🌑 Backlight Mati</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Feature Info Box -->
+          <div id="inspector-feature-desc" class="inspector-feature-card">
+            <strong id="hotspot-title" style="color: var(--primary); font-size: 0.84rem;">Layar QHD+ 240Hz Fast IPS</strong>
+            <p id="hotspot-detail" style="font-size: 0.76rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+              Panel resolusi 2560x1600 dengan cakupan warna 100% DCI-P3 dan response time 3ms. Menjamin akurasi warna profesional dan motion ultra mulus untuk kompetitif gaming.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 11: Head-to-Head Laptop Compare Studio (Tahap 5) -->
+  <div id="modal-laptop-compare" class="modal-overlay">
+    <div class="modal-box glass-panel modal-wide" style="max-width: 900px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <span class="spec-chip" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Head-to-Head Duel</span>
+        <h2>⚖️ Studio Komparasi Spesifikasi Laptop</h2>
+        <p>Bandingkan performa CPU, skor gaming FPS, daya tahan baterai, dan bobot antara dua unit secara berdampingan.</p>
+      </div>
+
+      <!-- Comparison Selectors -->
+      <div class="compare-selectors-grid">
+        <div class="compare-select-card">
+          <label style="font-size: 0.75rem; font-weight: 700; color: var(--primary);">LAPTOP A (UNIT UTAMA)</label>
+          <select id="compare-select-a" class="form-control" style="margin-top: 6px; font-weight: 600;">
+            <option value="rog" selected>ROG Titan X Pro (Rp 28.500.000)</option>
+            <option value="zenbook">ZenAir OLED 14 (Rp 16.900.000)</option>
+            <option value="macbook">MacBook Pro Studio M3 Max (Rp 34.900.000)</option>
+            <option value="swift">Swift Go 14 (Rp 7.800.000)</option>
+          </select>
+        </div>
+        <div class="compare-vs-divider">VS</div>
+        <div class="compare-select-card">
+          <label style="font-size: 0.75rem; font-weight: 700; color: #a855f7;">LAPTOP B (PEMBANDING)</label>
+          <select id="compare-select-b" class="form-control" style="margin-top: 6px; font-weight: 600;">
+            <option value="rog">ROG Titan X Pro (Rp 28.500.000)</option>
+            <option value="zenbook">ZenAir OLED 14 (Rp 16.900.000)</option>
+            <option value="macbook" selected>MacBook Pro Studio M3 Max (Rp 34.900.000)</option>
+            <option value="swift">Swift Go 14 (Rp 7.800.000)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Header Cards Comparison -->
+      <div class="compare-cards-duel">
+        <div id="duel-card-a" class="duel-card duel-card-l"></div>
+        <div id="duel-card-b" class="duel-card duel-card-r"></div>
+      </div>
+
+      <!-- Visual Benchmark Bars Comparison -->
+      <div class="compare-benchmarks-box">
+        <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+          📊 Duel Metrik & Performa Nyata
+        </div>
+        <div id="compare-metrics-container"></div>
+      </div>
+
+      <!-- Detailed Specs Matrix Table -->
+      <div class="compare-table-box">
+        <table class="compare-table" id="compare-specs-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Komponen</th>
+              <th style="width: 37.5%;" id="th-laptop-a">Laptop A</th>
+              <th style="width: 37.5%;" id="th-laptop-b">Laptop B</th>
+            </tr>
+          </thead>
+          <tbody id="compare-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Smart Verdict / Recommendation -->
+      <div id="compare-verdict-box" class="compare-verdict-box"></div>
     </div>
   </div>
 

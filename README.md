@@ -50,6 +50,29 @@ Showroom dan toko laptop 3D interaktif berbasis browser, dilengkapi showcase 3D 
 - **Ekspor Data CRM & Akuntansi (CSV Export)**:
   - Tombol **"Unduh CSV"** langsung dari dashboard analitik untuk mengunduh rekap leads dan penjualan toko.
 
+### 🌟 Tahap 5: Multi-Experience, 3D Inspector, Compare Studio & Live Visitors
+- **Studio Inspeksi 3D Laptop 360° (Interactive 3D Inspector)**:
+  - Orbit 360° penuh dengan drag mouse / sentuh layar dan scroll zoom.
+  - Slider engsel interaktif (0° tertutup rapat hingga 145° terbuka maksimal).
+  - Pemilih warna bodi (*Stealth Phantom Black*, *Celestial Platinum Silver*, *Midnight Deep Blue*, *Cyberpunk Purple*).
+  - Pencahayaan keyboard backlight RGB dinamis (*Cyber Cyan*, *Spectrum Wave*, *ROG Crimson*, *Mati*).
+  - Hotspot interaktif untuk inspeksi layar OLED 240Hz, sistem pendingin vapor chamber, keyboard mechanical, dan port Thunderbolt 4.
+  - Tombol checkout langsung dari studio inspeksi 3D.
+- **Simulasi Pengunjung Lain (Autonomous NPC Live Visitors)**:
+  - Kehadiran avatar Roblox pengunjung lain di showroom (*Budi Gamer*, *Clarissa Pro*, *Dimas Aditya*).
+  - Sistem AI navigasi titik singgah (*wandering waypoints*) yang mengelilingi laptop showcase dan lobby secara natural.
+  - Papan nama 3D melayang (*billboard sprite*) di atas kepala pengunjung dengan indikator online hijau berdenyut.
+  - Indikator real-time counter di top navigation: *👥 4 Pengunjung Online*.
+- **Studio Komparasi Head-to-Head 2 Laptop**:
+  - Duel spesifikasi berdampingan antara 2 laptop pilihan pengunjung.
+  - Duel metrik visual animasi: CPU Cinebench R23, Gaming FPS Cyberpunk 2077 RTX, Kecepatan Render 4K, Daya Baterai, dan Bobot Ringan.
+  - Matriks perbandingan hardware lengkap dengan penyorotan unit pemenang (*winner highlight*).
+  - Rekomendasi pintar AI Ekalaya untuk memandu keputusan pembelian pengunjung.
+- **Sintesis Audio Prosedural (Web Audio API Synthesizer)**:
+  - Efek suara langkah kaki (*sneaker footstep tap*) tersinkronisasi otomatis dengan ayunan kaki karakter Roblox saat berjalan.
+  - Efek denting kristal (*crystal UI chime*) pada interaksi tombol dan modal.
+  - Toggle audio ambience suasana showroom futuristik yang santai.
+
 ---
 
 ## 🚀 Cara Menjalankan Server Lokal

@@ -1,3 +1,4 @@
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 import { VirtualOffice } from './virtual-office.js';
 
 // Ekalaya Laptop Store Catalog Data
@@ -151,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileJoystick();
   render2DView();
   initTahap4Features();
+  initTahap5Features();
 });
 
 // 1. Initialize Virtual Office 3D
@@ -176,6 +178,9 @@ function initVirtualOffice() {
       },
       onMinimapUpdate: (data) => {
         drawMinimap(data);
+      },
+      onFootstep: () => {
+        playFootstepSound();
       }
     });
   } catch (err) {
@@ -1178,6 +1183,78 @@ function toggleAmbientAudio(btn) {
   }
 }
 
+// Procedural Sneaker Footstep Sound
+function playFootstepSound() {
+  if (!state.audioContext) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) state.audioContext = new AudioCtx();
+    } catch (e) {
+      return;
+    }
+  }
+  if (!state.audioContext || state.audioContext.state !== 'running') return;
+
+  try {
+    const t = state.audioContext.currentTime;
+    const bufferSize = Math.floor(state.audioContext.sampleRate * 0.035);
+    const buffer = state.audioContext.createBuffer(1, bufferSize, state.audioContext.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
+    }
+    const noise = state.audioContext.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = state.audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(320 + Math.random() * 90, t);
+
+    const gain = state.audioContext.createGain();
+    gain.gain.setValueAtTime(0.045, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(state.audioContext.destination);
+
+    noise.start(t);
+  } catch (err) {}
+}
+
+// Crisp UI Crystal Chime Sound
+function playUIChime() {
+  if (!state.audioContext) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) state.audioContext = new AudioCtx();
+    } catch (e) {
+      return;
+    }
+  }
+  if (!state.audioContext) return;
+  if (state.audioContext.state === 'suspended') {
+    state.audioContext.resume();
+  }
+
+  try {
+    const t = state.audioContext.currentTime;
+    const osc = state.audioContext.createOscillator();
+    const gain = state.audioContext.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(987.77, t); // B5
+    osc.frequency.exponentialRampToValueAtTime(1975.53, t + 0.07);
+
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+    osc.connect(gain);
+    gain.connect(state.audioContext.destination);
+    osc.start(t);
+    osc.stop(t + 0.12);
+  } catch (err) {}
+}
+
 // 13. Mobile Virtual Joystick
 function initMobileJoystick() {
   const base = document.getElementById('joystick-base');
@@ -1476,3 +1553,638 @@ function exportCRMDataToCSV() {
   document.body.removeChild(link);
   showToast('📥 Berhasil mengunduh file rekap CSV!');
 }
+
+// ==========================================================================
+// 17. Tahap 5: 3D Laptop Inspector 360°, Head-to-Head Compare & Live Visitors
+// ==========================================================================
+let inspector3D = null;
+let currentInspectorLaptopId = 'rog';
+
+// Benchmark and specs matrix database for Tahap 5
+const LAPTOP_BENCHMARKS = {
+  rog: {
+    cinebenchMulti: 34500,
+    cinebenchSingle: 2280,
+    gamingFpsCyberpunk: 98,
+    renderTime4K: 2.1, // mins (lower is better)
+    batteryLife: 6.5, // hrs
+    weightKg: 2.6, // kg (lower is better)
+    ports: '2x TB4, 1x HDMI 2.1, 3x USB-A 3.2, 2.5G LAN',
+    cooling: 'Dual Liquid Metal + Vapor Chamber 7 Heatpipes',
+    display: '16" QHD+ 240Hz Fast IPS 500 nits'
+  },
+  zenbook: {
+    cinebenchMulti: 21800,
+    cinebenchSingle: 1950,
+    gamingFpsCyberpunk: 38,
+    renderTime4K: 4.8,
+    batteryLife: 15.5,
+    weightKg: 1.1,
+    ports: '2x TB4 Type-C, 1x USB-A 3.2, 1x HDMI 2.1 TMDS',
+    cooling: 'Dual Fan IceBlade Ultra Slim 0.1mm Fin',
+    display: '14" 2.8K 120Hz Lumina OLED 500 nits HDR'
+  },
+  macbook: {
+    cinebenchMulti: 31200,
+    cinebenchSingle: 2340,
+    gamingFpsCyberpunk: 62,
+    renderTime4K: 1.8,
+    batteryLife: 18.0,
+    weightKg: 1.6,
+    ports: '3x Thunderbolt 4, 1x HDMI, SDXC, MagSafe 3',
+    cooling: 'High-Efficiency Dual Fan Unibody Thermal Arch',
+    display: '14.2" Liquid Retina XDR 120Hz ProMotion 1600 nits'
+  },
+  swift: {
+    cinebenchMulti: 14200,
+    cinebenchSingle: 1480,
+    gamingFpsCyberpunk: 28,
+    renderTime4K: 8.5,
+    batteryLife: 12.0,
+    weightKg: 1.4,
+    ports: '2x USB Type-C, 2x USB-A 3.2, 1x HDMI 2.1',
+    cooling: 'TwinAir Dual Fan Cooling System',
+    display: '14" FHD+ IPS 100% sRGB 350 nits'
+  }
+};
+
+function initTahap5Features() {
+  // A. Dock buttons
+  const compareDockBtn = document.getElementById('btn-compare-dock');
+  if (compareDockBtn) {
+    compareDockBtn.addEventListener('click', () => {
+      openLaptopCompareModal('rog', 'macbook');
+      playUIChime();
+    });
+  }
+
+  const inspectDockBtn = document.getElementById('btn-inspect-dock');
+  if (inspectDockBtn) {
+    inspectDockBtn.addEventListener('click', () => {
+      openLaptopInspector('rog');
+      playUIChime();
+    });
+  }
+
+  // B. Inspector Controls Setup
+  initInspectorControls();
+
+  // C. Head-to-Head Compare Listeners
+  initLaptopCompareListeners();
+
+  // D. Live Visitors Presence Counter Simulation
+  initLiveVisitorCounter();
+}
+
+// --------------------------------------------------------------------------
+// 3D LAPTOP INSPECTOR ENGINE (Tahap 5)
+// --------------------------------------------------------------------------
+function initInspectorControls() {
+  const modelSelect = document.getElementById('inspector-model-select');
+  if (modelSelect) {
+    modelSelect.addEventListener('change', (e) => {
+      openLaptopInspector(e.target.value);
+    });
+  }
+
+  // Hinge Angle Slider
+  const hingeSlider = document.getElementById('hinge-angle-slider');
+  const hingeVal = document.getElementById('hinge-angle-val');
+  if (hingeSlider && hingeVal) {
+    hingeSlider.addEventListener('input', (e) => {
+      const angle = parseInt(e.target.value);
+      hingeVal.textContent = `${angle}°`;
+      if (inspector3D && inspector3D.hingeGroup) {
+        // Hinge rotates around X axis from closed (Math.PI/2) to open
+        const rad = ((145 - angle) * Math.PI) / 180;
+        inspector3D.hingeGroup.rotation.x = rad;
+      }
+    });
+  }
+
+  // Colorway Switcher
+  const colorwayMap = {
+    stealth: 0x181920,
+    silver: 0xd1d5db,
+    blue: 0x1e3a8a,
+    purple: 0x581c87
+  };
+
+  const colorwayButtons = document.querySelectorAll('.colorway-btn');
+  colorwayButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      colorwayButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const colorKey = btn.getAttribute('data-color');
+      const hex = colorwayMap[colorKey] || 0x181920;
+      if (inspector3D && inspector3D.chassisMat) {
+        inspector3D.chassisMat.color.setHex(hex);
+        playUIChime();
+        showToast(`Warna bodi diubah ke: ${btn.getAttribute('title')}`);
+      }
+    });
+  });
+
+  // RGB Backlight Modes
+  const rgbButtons = document.querySelectorAll('.rgb-mode-btn');
+  rgbButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      rgbButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.getAttribute('data-rgb');
+      if (inspector3D) {
+        inspector3D.rgbMode = mode;
+        if (mode === 'cyan') {
+          inspector3D.keyboardMat.emissive.setHex(0x00f2fe);
+          inspector3D.keyboardMat.emissiveIntensity = 0.8;
+        } else if (mode === 'crimson') {
+          inspector3D.keyboardMat.emissive.setHex(0xff0055);
+          inspector3D.keyboardMat.emissiveIntensity = 0.9;
+        } else if (mode === 'off') {
+          inspector3D.keyboardMat.emissive.setHex(0x000000);
+          inspector3D.keyboardMat.emissiveIntensity = 0.0;
+        }
+        playUIChime();
+      }
+    });
+  });
+
+  // Hotspots Chips
+  const hotspotDescriptions = {
+    screen: {
+      title: '🖥️ Layar Panel Ultra Fast QHD+ / OLED',
+      detail: 'Dukungan akurasi 100% DCI-P3, HDR True Black, dan refresh rate hingga 240Hz 3ms untuk visual gaming dan grading video tanpa ghosting.'
+    },
+    keyboard: {
+      title: '⌨️ Keyboard Chiclet Per-Key RGB Mechanical',
+      detail: 'Travel key 1.7mm yang empuk dengan anti-ghosting N-Key Rollover, tombol macro pintar, dan keycaps anti-minyak UV-coated.'
+    },
+    cooling: {
+      title: '❄️ Dual-Fan Vapor Chamber Thermal Solution',
+      detail: 'Chamber uap tembaga murni dengan cairan liquid metal pada CPU & GPU, menjaga suhu di bawah 75°C saat full load 175W TGP.'
+    },
+    ports: {
+      title: '⚡ Port Lengkap: Thunderbolt 4 & HDMI 2.1',
+      detail: 'Mendukung display output 8K 60Hz, transfer data supercepat 40Gbps, serta Power Delivery charging 100W fleksibel di mana saja.'
+    }
+  };
+
+  const hotspotChips = document.querySelectorAll('.hotspot-chip');
+  hotspotChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      hotspotChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const part = chip.getAttribute('data-part');
+      const info = hotspotDescriptions[part];
+      if (info) {
+        const titleEl = document.getElementById('hotspot-title');
+        const detailEl = document.getElementById('hotspot-detail');
+        if (titleEl) titleEl.textContent = info.title;
+        if (detailEl) detailEl.textContent = info.detail;
+        playUIChime();
+
+        if (inspector3D) {
+          if (part === 'screen') inspector3D.targetPhi = Math.PI * 0.42;
+          else if (part === 'keyboard') inspector3D.targetPhi = Math.PI * 0.28;
+          else if (part === 'cooling') inspector3D.targetTheta = Math.PI;
+          else if (part === 'ports') inspector3D.targetTheta = Math.PI * 0.5;
+        }
+      }
+    });
+  });
+
+  // Direct Checkout from Inspector
+  const inspectorCheckoutBtn = document.getElementById('btn-inspector-checkout');
+  if (inspectorCheckoutBtn) {
+    inspectorCheckoutBtn.addEventListener('click', () => {
+      const modal = document.getElementById('modal-laptop-inspector');
+      if (modal) modal.classList.remove('active');
+      startLaptopCheckout(currentInspectorLaptopId);
+    });
+  }
+}
+
+// Global hook for laptop cards
+window.openLaptopInspector = function(laptopId = 'rog') {
+  currentInspectorLaptopId = laptopId;
+  const laptop = LAPTOPS_DATA.find(l => l.id === laptopId) || LAPTOPS_DATA[0];
+
+  const titleEl = document.getElementById('inspector-modal-title');
+  if (titleEl) {
+    titleEl.innerHTML = `🔍 ${laptop.title} — 3D Viewer 360°`;
+  }
+
+  const select = document.getElementById('inspector-model-select');
+  if (select) select.value = laptopId;
+
+  openModal('modal-laptop-inspector');
+  mount3DLaptopInspector(laptopId);
+};
+
+function mount3DLaptopInspector(laptopId) {
+  const container = document.getElementById('inspector-canvas-container');
+  if (!container) return;
+
+  // Clean old instance
+  if (inspector3D && inspector3D.animId) {
+    cancelAnimationFrame(inspector3D.animId);
+  }
+  container.innerHTML = '';
+
+  const width = container.clientWidth || 540;
+  const height = container.clientHeight || 440;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x07090e);
+
+  const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+  camera.position.set(0, 3.2, 5.8);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  container.appendChild(renderer.domElement);
+
+  // Studio Lighting
+  const ambLight = new THREE.AmbientLight(0xffffff, 0.9);
+  scene.add(ambLight);
+
+  const keyLight = new THREE.DirectionalLight(0xfff5ea, 1.4);
+  keyLight.position.set(6, 10, 8);
+  keyLight.castShadow = true;
+  scene.add(keyLight);
+
+  const rimLight = new THREE.DirectionalLight(0x00f2fe, 1.2);
+  rimLight.position.set(-8, 4, -6);
+  scene.add(rimLight);
+
+  const fillLight = new THREE.PointLight(0xff0055, 0.8, 15);
+  fillLight.position.set(0, -2, 4);
+  scene.add(fillLight);
+
+  // Group root
+  const rootGroup = new THREE.Group();
+  scene.add(rootGroup);
+
+  // Chassis Material
+  const chassisMat = new THREE.MeshStandardMaterial({
+    color: laptopId === 'rog' ? 0x181920 : laptopId === 'macbook' ? 0x222329 : laptopId === 'zenbook' ? 0x1e293b : 0x334155,
+    roughness: 0.32,
+    metalness: 0.72
+  });
+
+  const keyboardMat = new THREE.MeshStandardMaterial({
+    color: 0x09090b,
+    roughness: 0.4,
+    emissive: laptopId === 'rog' ? 0xff0055 : 0x00f2fe,
+    emissiveIntensity: 0.75
+  });
+
+  const screenMat = new THREE.MeshStandardMaterial({
+    color: 0x05070a,
+    emissive: 0x00f2fe,
+    emissiveIntensity: 0.45,
+    roughness: 0.1,
+    metalness: 0.9
+  });
+
+  // Base Body (3.4 x 0.14 x 2.3)
+  const baseGeo = new THREE.BoxGeometry(3.4, 0.14, 2.3);
+  const baseMesh = new THREE.Mesh(baseGeo, chassisMat);
+  baseMesh.castShadow = true;
+  baseMesh.receiveShadow = true;
+  rootGroup.add(baseMesh);
+
+  // Recessed Keyboard Deck
+  const kbGeo = new THREE.BoxGeometry(2.9, 0.02, 1.2);
+  const kbMesh = new THREE.Mesh(kbGeo, keyboardMat);
+  kbMesh.position.set(0, 0.075, -0.2);
+  rootGroup.add(kbMesh);
+
+  // Trackpad
+  const tpGeo = new THREE.BoxGeometry(1.1, 0.015, 0.68);
+  const tpMat = new THREE.MeshStandardMaterial({ color: 0x222634, roughness: 0.2, metalness: 0.5 });
+  const tpMesh = new THREE.Mesh(tpGeo, tpMat);
+  tpMesh.position.set(0, 0.075, 0.72);
+  rootGroup.add(tpMesh);
+
+  // Hinge Group (Pivot at rear edge)
+  const hingeGroup = new THREE.Group();
+  hingeGroup.position.set(0, 0.07, -1.14);
+  rootGroup.add(hingeGroup);
+
+  // Screen Lid Mesh (Child of HingeGroup, offset upwards)
+  const lidGeo = new THREE.BoxGeometry(3.4, 2.2, 0.08);
+  const lidMesh = new THREE.Mesh(lidGeo, chassisMat);
+  lidMesh.position.set(0, 1.1, 0);
+  lidMesh.castShadow = true;
+  hingeGroup.add(lidMesh);
+
+  // Display Panel Screen
+  const screenGeo = new THREE.BoxGeometry(3.15, 1.95, 0.01);
+  const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+  screenMesh.position.set(0, 1.1, 0.042);
+  hingeGroup.add(screenMesh);
+
+  // Outer Shell Logo
+  const logoGeo = new THREE.BoxGeometry(0.5, 0.5, 0.01);
+  const logoMat = new THREE.MeshBasicMaterial({ color: 0x00f2fe });
+  const logoMesh = new THREE.Mesh(logoGeo, logoMat);
+  logoMesh.position.set(0, 1.1, -0.042);
+  hingeGroup.add(logoMesh);
+
+  // Set default hinge angle (115 degrees open)
+  const initialRad = ((145 - 115) * Math.PI) / 180;
+  hingeGroup.rotation.x = initialRad;
+
+  // Orbit Control State
+  let isDragging = false;
+  let prevX = 0;
+  let prevY = 0;
+  let theta = 0.5;
+  let phi = Math.PI * 0.35;
+  let radius = 6.2;
+  let targetTheta = theta;
+  let targetPhi = phi;
+
+  const onDown = (e) => {
+    isDragging = true;
+    prevX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+    prevY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+  };
+
+  const onMove = (e) => {
+    if (!isDragging) return;
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+    const dx = clientX - prevX;
+    const dy = clientY - prevY;
+    prevX = clientX;
+    prevY = clientY;
+
+    targetTheta -= dx * 0.012;
+    targetPhi = Math.max(0.15, Math.min(Math.PI * 0.48, targetPhi - dy * 0.01));
+  };
+
+  const onUp = () => { isDragging = false; };
+
+  const onWheel = (e) => {
+    e.preventDefault();
+    radius = Math.max(3.8, Math.min(9.5, radius + e.deltaY * 0.005));
+  };
+
+  renderer.domElement.addEventListener('mousedown', onDown);
+  renderer.domElement.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+
+  renderer.domElement.addEventListener('touchstart', onDown, { passive: true });
+  renderer.domElement.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchend', onUp);
+  renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
+
+  inspector3D = {
+    scene,
+    camera,
+    renderer,
+    hingeGroup,
+    chassisMat,
+    keyboardMat,
+    screenMat,
+    rgbMode: 'cyan',
+    targetTheta,
+    targetPhi,
+    animId: null
+  };
+
+  // Render Loop
+  let clock = new THREE.Clock();
+  const animateInspector = () => {
+    inspector3D.animId = requestAnimationFrame(animateInspector);
+    const delta = clock.getDelta();
+    const elapsed = clock.getElapsedTime();
+
+    // Auto subtle drift when idle
+    if (!isDragging) {
+      targetTheta += delta * 0.2;
+    }
+
+    theta = THREE.MathUtils.lerp(theta, targetTheta, 0.1);
+    phi = THREE.MathUtils.lerp(phi, targetPhi, 0.1);
+
+    // RGB Rainbow Spectrum animation
+    if (inspector3D.rgbMode === 'rainbow') {
+      const hue = (elapsed * 0.4) % 1;
+      keyboardMat.emissive.setHSL(hue, 1.0, 0.5);
+      keyboardMat.emissiveIntensity = 0.85;
+    }
+
+    // Camera Orbit positioning
+    camera.position.x = radius * Math.sin(phi) * Math.sin(theta);
+    camera.position.y = radius * Math.cos(phi) + 0.3;
+    camera.position.z = radius * Math.sin(phi) * Math.cos(theta);
+    camera.lookAt(0, 0.6, 0);
+
+    renderer.render(scene, camera);
+  };
+  animateInspector();
+}
+
+// --------------------------------------------------------------------------
+// HEAD-TO-HEAD LAPTOP COMPARE ENGINE (Tahap 5)
+// --------------------------------------------------------------------------
+function initLaptopCompareListeners() {
+  const selectA = document.getElementById('compare-select-a');
+  const selectB = document.getElementById('compare-select-b');
+
+  if (selectA && selectB) {
+    selectA.addEventListener('change', () => {
+      renderLaptopComparison(selectA.value, selectB.value);
+      playUIChime();
+    });
+    selectB.addEventListener('change', () => {
+      renderLaptopComparison(selectA.value, selectB.value);
+      playUIChime();
+    });
+  }
+}
+
+window.openLaptopCompareModal = function(idA = 'rog', idB = 'macbook') {
+  const selectA = document.getElementById('compare-select-a');
+  const selectB = document.getElementById('compare-select-b');
+  if (selectA) selectA.value = idA;
+  if (selectB) selectB.value = idB;
+
+  openModal('modal-laptop-compare');
+  renderLaptopComparison(idA, idB);
+};
+
+function renderLaptopComparison(idA, idB) {
+  const laptopA = LAPTOPS_DATA.find(l => l.id === idA) || LAPTOPS_DATA[0];
+  const laptopB = LAPTOPS_DATA.find(l => l.id === idB) || LAPTOPS_DATA[1];
+  const benchA = LAPTOP_BENCHMARKS[idA] || LAPTOP_BENCHMARKS.rog;
+  const benchB = LAPTOP_BENCHMARKS[idB] || LAPTOP_BENCHMARKS.macbook;
+
+  // 1. Header Duel Cards
+  const cardA = document.getElementById('duel-card-a');
+  const cardB = document.getElementById('duel-card-b');
+  if (cardA) {
+    cardA.innerHTML = `
+      <span class="spec-chip" style="background: rgba(0, 242, 254, 0.15); color: var(--primary);">${laptopA.badge}</span>
+      <h3 style="font-family: var(--font-heading); font-size: 1.15rem; margin: 8px 0 4px; color: var(--text-main);">${laptopA.title}</h3>
+      <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">${laptopA.category}</div>
+      <div style="font-size: 1.1rem; font-weight: 900; color: var(--primary); margin-bottom: 12px;">${laptopA.price}</div>
+      <button class="btn-submit" style="padding: 7px 14px; font-size: 0.76rem;" onclick="document.getElementById('modal-laptop-compare').classList.remove('active'); startLaptopCheckout('${laptopA.id}')">
+        Pilih Unit Ini
+      </button>
+    `;
+  }
+  if (cardB) {
+    cardB.innerHTML = `
+      <span class="spec-chip" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">${laptopB.badge}</span>
+      <h3 style="font-family: var(--font-heading); font-size: 1.15rem; margin: 8px 0 4px; color: var(--text-main);">${laptopB.title}</h3>
+      <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;">${laptopB.category}</div>
+      <div style="font-size: 1.1rem; font-weight: 900; color: #a855f7; margin-bottom: 12px;">${laptopB.price}</div>
+      <button class="btn-submit" style="padding: 7px 14px; font-size: 0.76rem; background: linear-gradient(135deg, #a855f7, #ec4899);" onclick="document.getElementById('modal-laptop-compare').classList.remove('active'); startLaptopCheckout('${laptopB.id}')">
+        Pilih Unit Ini
+      </button>
+    `;
+  }
+
+  // 2. Animated Benchmark Duel Bars
+  const metricsContainer = document.getElementById('compare-metrics-container');
+  if (metricsContainer) {
+    const metrics = [
+      {
+        name: 'Performa Multi-Core CPU (Cinebench R23)',
+        valA: benchA.cinebenchMulti,
+        valB: benchB.cinebenchMulti,
+        displayA: `${benchA.cinebenchMulti.toLocaleString()} Pts`,
+        displayB: `${benchB.cinebenchMulti.toLocaleString()} Pts`,
+        higherIsBetter: true
+      },
+      {
+        name: 'Gaming FPS Cyberpunk 2077 (Ultra RTX)',
+        valA: benchA.gamingFpsCyberpunk,
+        valB: benchB.gamingFpsCyberpunk,
+        displayA: `${benchA.gamingFpsCyberpunk} FPS`,
+        displayB: `${benchB.gamingFpsCyberpunk} FPS`,
+        higherIsBetter: true
+      },
+      {
+        name: 'Waktu Render Video 4K 10 Menit (Lebih Cepat = Juara)',
+        valA: benchA.renderTime4K,
+        valB: benchB.renderTime4K,
+        displayA: `${benchA.renderTime4K} Menit`,
+        displayB: `${benchB.renderTime4K} Menit`,
+        higherIsBetter: false
+      },
+      {
+        name: 'Daya Tahan Baterai Real-World',
+        valA: benchA.batteryLife,
+        valB: benchB.batteryLife,
+        displayA: `${benchA.batteryLife} Jam`,
+        displayB: `${benchB.batteryLife} Jam`,
+        higherIsBetter: true
+      },
+      {
+        name: 'Portabilitas Bobot Bodi (Lebih Ringan = Nyaman)',
+        valA: benchA.weightKg,
+        valB: benchB.weightKg,
+        displayA: `${benchA.weightKg} Kg`,
+        displayB: `${benchB.weightKg} Kg`,
+        higherIsBetter: false
+      }
+    ];
+
+    metricsContainer.innerHTML = metrics.map(m => {
+      let pctA, pctB;
+      if (m.higherIsBetter) {
+        const total = m.valA + m.valB;
+        pctA = Math.round((m.valA / total) * 100);
+        pctB = 100 - pctA;
+      } else {
+        // Lower is better (inverted weight)
+        const total = (1 / m.valA) + (1 / m.valB);
+        pctA = Math.round(((1 / m.valA) / total) * 100);
+        pctB = 100 - pctA;
+      }
+
+      const winnerA = m.higherIsBetter ? m.valA >= m.valB : m.valA <= m.valB;
+      const winnerB = m.higherIsBetter ? m.valB >= m.valA : m.valB <= m.valA;
+
+      return `
+        <div class="compare-metric-row">
+          <div class="compare-metric-labels">
+            <span style="color: ${winnerA ? 'var(--primary)' : 'var(--text-muted)'}; font-weight: ${winnerA ? '800' : '600'};">
+              ${winnerA ? '👑 ' : ''}${m.displayA}
+            </span>
+            <span class="compare-metric-name">${m.name}</span>
+            <span style="color: ${winnerB ? '#a855f7' : 'var(--text-muted)'}; font-weight: ${winnerB ? '800' : '600'};">
+              ${m.displayB}${winnerB ? ' 👑' : ''}
+            </span>
+          </div>
+          <div class="compare-bar-dual">
+            <div class="compare-bar-l" style="width: ${pctA}%;"></div>
+            <div class="compare-bar-r" style="width: ${pctB}%;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 3. Detailed Specifications Matrix Table
+  const tbody = document.getElementById('compare-tbody');
+  const thA = document.getElementById('th-laptop-a');
+  const thB = document.getElementById('th-laptop-b');
+  if (thA) thA.textContent = laptopA.title;
+  if (thB) thB.textContent = laptopB.title;
+
+  if (tbody) {
+    const specsList = [
+      { label: 'Prosesor (CPU)', a: laptopA.specs.cpu, b: laptopB.specs.cpu },
+      { label: 'Kartu Grafis (GPU)', a: laptopA.specs.gpu, b: laptopB.specs.gpu },
+      { label: 'RAM & Kecepatan', a: laptopA.specs.ram, b: laptopB.specs.ram },
+      { label: 'Kapasitas Storage', a: laptopA.specs.storage, b: laptopB.specs.storage },
+      { label: 'Layar & Panel', a: laptopA.specs.display, b: laptopB.specs.display },
+      { label: 'Sistem Pendingin', a: benchA.cooling, b: benchB.cooling },
+      { label: 'Port & Konektivitas', a: benchA.ports, b: benchB.ports },
+      { label: 'Garansi Resmi', a: laptopA.specs.warranty, b: laptopB.specs.warranty }
+    ];
+
+    tbody.innerHTML = specsList.map(s => `
+      <tr>
+        <td style="font-weight: 700; color: var(--text-main);">${s.label}</td>
+        <td>${s.a}</td>
+        <td>${s.b}</td>
+      </tr>
+    `).join('');
+  }
+
+  // 4. Smart AI Verdict
+  const verdictBox = document.getElementById('compare-verdict-box');
+  if (verdictBox) {
+    let summaryText = '';
+    if (benchA.cinebenchMulti > benchB.cinebenchMulti && benchA.gamingFpsCyberpunk > benchB.gamingFpsCyberpunk) {
+      summaryText = `<strong>💡 Rekomendasi Ahli Ekalaya:</strong> <strong>${laptopA.title}</strong> adalah pemenang mutlak untuk komputasi berat, gaming AAA rata-kanan, dan simulasi 3D. Sedangkan <strong>${laptopB.title}</strong> unggul signifikan dari segi portabilitas bodi yang ramping dan efisiensi baterai hingga seharian penuh tanpa charger.`;
+    } else {
+      summaryText = `<strong>💡 Rekomendasi Ahli Ekalaya:</strong> <strong>${laptopB.title}</strong> memberikan efisiensi daya dan stabilitas rendering kelas profesional yang luar biasa. Jika anggaran dan kebutuhan Anda memprioritaskan performa grafis mentah RTX atau mobilitas ekstra ringan, sesuaikan dengan preferensi mobilitas harian Anda!`;
+    }
+    verdictBox.innerHTML = summaryText;
+  }
+}
+
+// --------------------------------------------------------------------------
+// LIVE VISITORS COUNTER SIMULATION (Tahap 5)
+// --------------------------------------------------------------------------
+function initLiveVisitorCounter() {
+  const visitorText = document.getElementById('live-visitor-text');
+  if (!visitorText) return;
+
+  setInterval(() => {
+    // Realistic fluctuation between 3 and 7 online users
+    const count = 3 + Math.floor(Math.random() * 5);
+    visitorText.textContent = `👥 ${count} Pengunjung Online`;
+  }, 18000);
+}
+
