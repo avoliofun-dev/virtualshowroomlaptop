@@ -1,4 +1,4 @@
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
 
 export class VirtualOffice {
   constructor(options = {}) {
@@ -121,8 +121,18 @@ export class VirtualOffice {
     const aspect = width / (height || 1);
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 250);
 
-    // 3. Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    // 3. Renderer with robust device compatibility fallback
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'default' });
+    } catch (e1) {
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'default' });
+      } catch (e2) {
+        renderer = new THREE.WebGLRenderer();
+      }
+    }
+    this.renderer = renderer;
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;

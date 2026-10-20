@@ -1,4 +1,4 @@
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
 import { VirtualOffice } from './virtual-office.js';
 
 // Ekalaya Laptop Store Catalog Data
@@ -185,13 +185,7 @@ function initVirtualOffice() {
     });
   } catch (err) {
     console.error('Failed to initialize 3D Virtual Showroom:', err);
-    state.activeMode = '2d';
-    const view3D = document.getElementById('canvas-container');
-    const view2D = document.getElementById('view-2d-container');
-    if (view3D && view2D) {
-      view3D.style.display = 'none';
-      view2D.classList.add('active');
-    }
+    showToast('⚠️ Menyiapkan showroom 3D... Silakan refresh jika layar belum tampil.');
   }
 }
 

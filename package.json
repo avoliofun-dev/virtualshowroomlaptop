@@ -1,19 +1,17 @@
 {
-  "name": "ekalaya-creative-agency-virtual-office",
+  "name": "ekalaya-laptop-virtual-showroom",
   "version": "1.0.0",
-  "description": "3D Virtual Office & Automation Showroom for Ekalaya Creative Agency",
-  "main": "index.html",
+  "description": "3D Virtual Showroom & Store for Ekalaya Laptop Store",
   "scripts": {
-    "build": "echo 'Static site ready for Vercel'",
     "start": "node server.js",
     "dev": "node server.js"
   },
   "keywords": [
-    "virtual-office",
+    "virtual-showroom",
     "threejs",
-    "creative-agency",
+    "laptop-store",
     "n8n-automation"
   ],
-  "author": "Ekalaya Creative",
+  "author": "Ekalaya Laptop",
   "license": "MIT"
 }
