@@ -386,8 +386,13 @@ function showInteractionPrompt(zone) {
   const desc = document.getElementById('prompt-desc');
   if (!container || !title || !desc) return;
 
-  title.innerHTML = `${zone.icon} ${zone.name}`;
-  desc.textContent = zone.subtitle;
+  if (zone.id === 'lobby') {
+    title.innerHTML = `👩‍💼 Frontliner Maya (n8n AI)`;
+    desc.textContent = `Konsultasi Spek Cerdas, Cicilan 0% & Garansi (Tekan E / Klik)`;
+  } else {
+    title.innerHTML = `${zone.icon} ${zone.name}`;
+    desc.textContent = zone.subtitle;
+  }
   container.classList.add('visible');
 }
 
@@ -398,7 +403,12 @@ function hideInteractionPrompt() {
 
 function handleZoneAction(zone) {
   if (zone.id === 'lobby') {
-    openModal('modal-reception');
+    // Open Maya Frontliner Chatbot with warm greeting
+    if (window.openFrontlinerChat) {
+      window.openFrontlinerChat();
+    } else {
+      openModal('modal-reception');
+    }
   } else if (zone.id === 'display') {
     openModal('modal-services');
   } else if (zone.id === 'meeting') {
@@ -2181,4 +2191,255 @@ function initLiveVisitorCounter() {
     visitorText.textContent = `👥 ${count} Pengunjung Online`;
   }, 18000);
 }
+
+// ==========================================================================
+// 18. FRONTLINER OFFICER MAYA — n8n AI CHAT & KNOWLEDGE ENGINE
+// ==========================================================================
+
+// Built-in intelligent knowledge base matching ekalaya-frontliner-knowledge.json
+const FRONTLINER_KNOWLEDGE = {
+  catalog: {
+    rog: {
+      id: 'rog',
+      title: 'ROG Titan X Pro',
+      price: 'Rp 28.500.000',
+      badge: 'Ultimate Gaming & Render Beast',
+      cpu: 'Core i9-14900HX (24-Core)',
+      gpu: 'RTX 4080 12GB (175W TGP)',
+      display: '16" QHD+ 240Hz 500 nits'
+    },
+    zenbook: {
+      id: 'zenbook',
+      title: 'ZenAir OLED 14',
+      price: 'Rp 16.900.000',
+      badge: 'Executive & Ultra-Slim 1.1kg',
+      cpu: 'Intel Core Ultra 7 + NPU AI',
+      gpu: 'Intel Arc Graphics',
+      display: '14" 2.8K 120Hz Lumina OLED'
+    },
+    macbook: {
+      id: 'macbook',
+      title: 'MacBook Pro Studio M3 Max',
+      price: 'Rp 34.900.000',
+      badge: 'Creative Industry Benchmark',
+      cpu: 'Apple M3 Max (14-Core)',
+      gpu: '30-Core GPU Hardware Ray-Tracing',
+      display: '14.2" Liquid Retina XDR 1600 nits'
+    },
+    swift: {
+      id: 'swift',
+      title: 'Swift Go 14',
+      price: 'Rp 7.800.000',
+      badge: 'Best Value & Everyday Work',
+      cpu: 'AMD Ryzen 5 7530U',
+      gpu: 'AMD Radeon Graphics',
+      display: '14" FHD+ 100% sRGB, Baterai 12 Jam'
+    }
+  },
+  rules: [
+    {
+      keywords: ['gaming', 'game', 'fps', 'rtx', 'cyberpunk', 'valorant', 'gta', 'dota', 'berat'],
+      suggestedId: 'rog',
+      reply: 'Untuk gaming AAA rata kanan dan olah grafis berat, rekomendasi mutlak saya adalah **ROG Titan X Pro** (Rp 28.500.000)! Ditenagai Intel Core i9-14900HX dan GPU RTX 4080 12GB (175W TGP). Layar 240Hz QHD+ memastikan visual sangat mulus tanpa screen tearing. Cyberpunk 2077 Ultra RTX berjalan stabil di ~98 FPS! Unit ini sedang promo cashback. Mau coba inspeksi 3D 360° unitnya?'
+    },
+    {
+      keywords: ['kuliah', 'mahasiswa', 'kantor', 'skripsi', 'office', 'budget', 'murah', 'pelajar', 'ringan'],
+      suggestedId: 'swift',
+      reply: 'Untuk kebutuhan kuliah, skripsi, dan administrasi kantor harian dengan budget efisien, pilihan juara adalah **Swift Go 14** (Rp 7.800.000). Sudah ditenagai Ryzen 5 7530U, RAM 16GB besar yang anti-lemot untuk buka 30 tab Chrome bersamaan, layar 100% sRGB yang nyaman di mata, dan baterai awet 12 jam. Sudah termasuk Windows 11 & Office original seumur hidup!'
+    },
+    {
+      keywords: ['desain', 'editing', 'video', 'premiere', 'photoshop', 'kreator', 'render', 'blender', 'macbook', 'oled'],
+      suggestedId: 'macbook',
+      reply: 'Untuk dunia konten kreator profesional, **MacBook Pro Studio M3 Max** (Rp 34.900.000) adalah standar emas dengan efisiensi render 4K tercepat (1.8 menit) dan layar Liquid Retina XDR 1600 nits. Namun jika mencari laptop Windows yang tipis dan layarnya OLED memukau, **ZenAir OLED 14** (Rp 16.900.000, 1.1kg) juga merupakan pilihan yang luar biasa!'
+    },
+    {
+      keywords: ['cicilan', 'kredit', 'angsuran', 'bunga', 'paylater', 'kredivo', 'bca', 'mandiri', 'kartu kredit'],
+      suggestedId: 'zenbook',
+      reply: 'Ekalaya menyediakan fasilitas **Cicilan 0% tanpa biaya admin** melalui kartu kredit rekanan (BCA, Mandiri, BNI, BRI) tenor 3, 6, 12, hingga 24 bulan! Simulasi angsuran: Swift Go 14 cuma Rp 325.000/bln, ZenAir OLED Rp 704.000/bln, dan ROG Titan X Rp 1.187.500/bln. Kami juga menerima SpayLater dan Kredivo resmi tanpa kartu kredit!'
+    },
+    {
+      keywords: ['garansi', 'rusak', 'rusak air', 'pecah', 'adp', 'service', 'resmi', 'distributor', 'klaim'],
+      suggestedId: 'rog',
+      reply: 'Semua unit di Ekalaya dijamin **100% Original & Bergaransi Resmi Distributor Indonesia** (1-2 tahun). Plus, Anda mendapatkan bonus eksklusif **Accidental Damage Protection (ADP) gratis 1 tahun** — menanggung kerusakan akibat ketumpahan kopi/air, jatuh tidak sengaja, atau lonjakan arus listrik tanpa biaya tambahan!'
+    },
+    {
+      keywords: ['promo', 'diskon', 'voucher', 'cashback', 'bonus', 'flash sale', 'hadiah', 'gratis'],
+      suggestedId: 'rog',
+      reply: 'Hari ini kami sedang mengadakan event **Live Flash Sale** dengan diskon hingga 35%! Gunakan voucher promo kode `EKALAYASALE500` saat checkout untuk potongan instan Rp 500.000 + bonus paket ransel waterproof, mouse wireless silent, dan mousepad gaming XXL senilai Rp 1.200.000!'
+    },
+    {
+      keywords: ['stok', 'ready', 'kirim', 'ongkir', 'packing', 'gojek', 'grab', 'jabodetabek', 'luar kota'],
+      suggestedId: 'zenbook',
+      reply: 'Seluruh 4 model laptop unggulan kami **Ready Stock** di showroom dan gudang pusat Ekalaya. Kami melayani pengiriman Instant/Same-Day untuk Jabodetabek, serta gratis ongkir ke seluruh Indonesia dengan proteksi packing kayu berlapis dan asuransi 100% aman!'
+    }
+  ],
+  defaultReply: 'Halo! Saya Maya dari meja Frontliner Ekalaya Laptop Store. Kami menyediakan laptop Gaming RTX monster, Ultrabook OLED super tipis 1.1kg, MacBook Pro M3 Max untuk industri kreatif, hingga laptop kuliah mahasiswa hemat daya. Boleh tahu kisaran anggaran atau kebutuhan spesifik yang sedang Kakak rencanakan?'
+};
+
+function initChatWidget() {
+  const chatWindow = document.getElementById('chat-window');
+  const chatTriggerBtn = document.getElementById('chat-trigger-btn');
+  const chatCloseBtn = document.getElementById('chat-close-btn');
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const chatSendBtn = document.getElementById('chat-send-btn');
+  const statusBadge = document.getElementById('frontliner-online-badge');
+  const suggestionChips = document.querySelectorAll('.suggestion-chip');
+
+  if (!chatWindow || !chatTriggerBtn) return;
+
+  const toggleChat = () => {
+    chatWindow.classList.toggle('active');
+    if (chatWindow.classList.contains('active') && chatInput) {
+      chatInput.focus();
+    }
+    playUIChime();
+  };
+
+  chatTriggerBtn.addEventListener('click', toggleChat);
+  if (chatCloseBtn) {
+    chatCloseBtn.addEventListener('click', () => {
+      chatWindow.classList.remove('active');
+      playUIChime();
+    });
+  }
+
+  // Global helper to open chat from 3D zone or button
+  window.openFrontlinerChat = function(initialQuery = null) {
+    if (!chatWindow.classList.contains('active')) {
+      chatWindow.classList.add('active');
+    }
+    if (initialQuery && chatInput) {
+      chatInput.value = initialQuery;
+      submitUserQuery(initialQuery);
+    } else if (chatInput) {
+      chatInput.focus();
+    }
+    playUIChime();
+  };
+
+  // Suggestion chips click
+  suggestionChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const text = chip.textContent.replace(/^[^\w\s]+/, '').trim();
+      submitUserQuery(text);
+    });
+  });
+
+  // Input send actions
+  if (chatSendBtn && chatInput) {
+    chatSendBtn.addEventListener('click', () => {
+      const text = chatInput.value.trim();
+      if (text) submitUserQuery(text);
+    });
+
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const text = chatInput.value.trim();
+        if (text) submitUserQuery(text);
+      }
+    });
+  }
+
+  // Core Submit and Response Handler
+  async function submitUserQuery(text) {
+    if (!chatMessages) return;
+
+    // 1. Append User Bubble
+    const userBubble = document.createElement('div');
+    userBubble.className = 'chat-bubble bubble-user';
+    userBubble.textContent = text;
+    chatMessages.appendChild(userBubble);
+    if (chatInput) chatInput.value = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // 2. Typing Indicator
+    const typingBubble = document.createElement('div');
+    typingBubble.className = 'chat-bubble bubble-bot';
+    typingBubble.innerHTML = `<div class="chat-typing-dots"><span></span><span></span><span></span></div> <span style="font-size:0.75rem; opacity:0.8; margin-left:4px;">Maya sedang memproses...</span>`;
+    chatMessages.appendChild(typingBubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Target n8n Webhook URL
+    const webhookUrl = state.n8nWebhookUrl || 'https://n8n-production-82f8.up.railway.app/webhook/ekalaya-frontliner';
+    let replyText = '';
+    let suggestedLaptop = null;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          clientName: 'Pengunjung Virtual Showroom',
+          timestamp: new Date().toISOString()
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        replyText = data.reply || data.output || data.message || '';
+        suggestedLaptop = data.suggestedLaptop || null;
+        if (statusBadge) statusBadge.textContent = '🟢 n8n AI Online';
+      }
+    } catch (err) {
+      // Offline fallback: use built-in smart knowledge base
+      if (statusBadge) statusBadge.textContent = '🟢 Maya AI (Smart Engine)';
+    }
+
+    // Fallback to local intelligent rules if n8n response was empty
+    if (!replyText) {
+      const lower = text.toLowerCase();
+      const matched = FRONTLINER_KNOWLEDGE.rules.find(r => r.keywords.some(k => lower.includes(k)));
+      if (matched) {
+        replyText = matched.reply;
+        suggestedLaptop = FRONTLINER_KNOWLEDGE.catalog[matched.suggestedId] || null;
+      } else {
+        replyText = FRONTLINER_KNOWLEDGE.defaultReply;
+        suggestedLaptop = FRONTLINER_KNOWLEDGE.catalog.zenbook;
+      }
+    }
+
+    // Remove typing bubble
+    if (typingBubble.parentNode) {
+      typingBubble.parentNode.removeChild(typingBubble);
+    }
+
+    // 3. Append Maya Bot Bubble
+    const botBubble = document.createElement('div');
+    botBubble.className = 'chat-bubble bubble-bot';
+    
+    // Format bold markdown (**text** -> <strong>text</strong>)
+    const formattedHtml = replyText
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`(.*?)`/g, '<code style="background:rgba(0,242,254,0.15); padding:2px 5px; border-radius:4px; color:#00f2fe;">$1</code>');
+    
+    botBubble.innerHTML = formattedHtml;
+
+    // 4. If a laptop recommendation is returned, attach action card
+    if (suggestedLaptop) {
+      const card = document.createElement('div');
+      card.className = 'chat-laptop-card-action';
+      card.innerHTML = `
+        <div class="card-mini-title">⭐ Rekomendasi: ${suggestedLaptop.title}</div>
+        <div class="card-mini-price">${suggestedLaptop.price} — ${suggestedLaptop.badge || ''}</div>
+        <div class="btn-action-group">
+          <button class="btn-mini-inspect" onclick="openLaptopInspector('${suggestedLaptop.id}')">🔍 Inspeksi 3D 360°</button>
+          <button class="btn-mini-buy" onclick="document.getElementById('chat-window').classList.remove('active'); startLaptopCheckout('${suggestedLaptop.id}')">🛒 Pesan Unit</button>
+        </div>
+      `;
+      botBubble.appendChild(card);
+    }
+
+    chatMessages.appendChild(botBubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    playUIChime();
+  }
+}
+
 

@@ -20,11 +20,24 @@ fs.mkdirSync('dist', { recursive: true });
 fs.copyFileSync('index.html', 'dist/index.html');
 copyDir('js', 'dist/js');
 copyDir('css', 'dist/css');
+if (fs.existsSync('ekalaya-frontliner-knowledge.json')) {
+  fs.copyFileSync('ekalaya-frontliner-knowledge.json', 'dist/ekalaya-frontliner-knowledge.json');
+}
+if (fs.existsSync('n8n-workflow-frontliner-ai.json')) {
+  fs.copyFileSync('n8n-workflow-frontliner-ai.json', 'dist/n8n-workflow-frontliner-ai.json');
+}
 
 // 2. Output to public/
 fs.mkdirSync('public', { recursive: true });
 fs.copyFileSync('index.html', 'public/index.html');
 copyDir('js', 'public/js');
 copyDir('css', 'public/css');
+if (fs.existsSync('ekalaya-frontliner-knowledge.json')) {
+  fs.copyFileSync('ekalaya-frontliner-knowledge.json', 'public/ekalaya-frontliner-knowledge.json');
+}
+if (fs.existsSync('n8n-workflow-frontliner-ai.json')) {
+  fs.copyFileSync('n8n-workflow-frontliner-ai.json', 'public/n8n-workflow-frontliner-ai.json');
+}
 
 console.log('Build complete: static files ready in dist/ and public/');
+

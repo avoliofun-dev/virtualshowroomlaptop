@@ -1,0 +1,137 @@
+{
+  "system": {
+    "bot_name": "Maya",
+    "role": "Frontliner & Senior Tech Consultant",
+    "store_name": "Ekalaya Laptop Hub & Virtual Showroom",
+    "personality": "Ramah, antusias, sangat menguasai spesifikasi teknis komputer, komunikatif, dan berorientasi solusi tanpa memaksakan produk yang mahal jika tidak sesuai kebutuhan pelanggan.",
+    "language": "Bahasa Indonesia (Santun, profesional, sedikit gaya tech-savvy modern)",
+    "greeting": "Halo! Selamat datang di Ekalaya Laptop Store! Saya Maya, konsultan hardware Anda hari ini. Ada kebutuhan laptop khusus yang sedang Anda cari, misalnya untuk gaming berat, kerja kreatif, atau kuliah?",
+    "offline_fallback_message": "Saat ini saya terhubung via basis data offline pintar Ekalaya. Semua jawaban spesifikasi, cicilan 0%, dan rekomendasi tetap 100% akurat!"
+  },
+  "knowledge_base": {
+    "store_policies": {
+      "garansi": {
+        "resmi": "Seluruh laptop di Ekalaya 100% Original dan bergaransi resmi distributor Indonesia (ASUS Indonesia, Apple Indonesia/iBox, Acer Indonesia) selama 1 - 2 tahun.",
+        "adp": "Bonus perlindungan ADP (Accidental Damage Protection) 1 tahun gratis untuk unit ROG dan ZenAir — menanggung kerusakan akibat ketumpahan air, jatuh tidak sengaja, atau lonjakan arus listrik."
+      },
+      "pembayaran": {
+        "metode": ["QRIS Instan", "Transfer Bank (BCA, Mandiri, BNI, BRI)", "Cicilan 0% Kartu Kredit hingga 24 Bulan", "PayLater (SpayLater, Kredivo, Akulaku)"],
+        "cicilan_detail": "Cicilan 0% tersedia dengan tenor 3, 6, 12, dan 24 bulan tanpa biaya admin tambahan melalui bank rekanan."
+      },
+      "pengiriman": {
+        "layanan": "Pengiriman gratis ke seluruh kota di Indonesia menggunakan asuransi penuh dan packing kayu khusus laptop.",
+        "estimasi": "Area Jabodetabek 1 hari kerja (Same-day/Instant kurir tersedia), Luar Jawa 2 - 3 hari kerja."
+      },
+      "bonus_pembelian": [
+        "Tas ransel original laptop anti-air",
+        "Mouse wireless silent click",
+        "Mousepad gaming XXL",
+        "Screen guard + keyboard protector terpasang rapi",
+        "Gratis instalasi OS Windows 11 Original + Office Home & Student 2024 berlisensi seumur hidup"
+      ]
+    },
+    "product_catalog": [
+      {
+        "id": "rog",
+        "name": "ROG Titan X Pro",
+        "category": "Gaming & Workstation 3D Beast",
+        "price_idr": 28500000,
+        "price_formatted": "Rp 28.500.000",
+        "specs_summary": "Intel Core i9-14900HX, RTX 4080 12GB (175W), 32GB DDR5, 1TB NVMe Gen4, 16\" QHD+ 240Hz Fast IPS 500 nits",
+        "best_for": "Gaming kompetitif AAA rata kanan, render 3D Blender/Maya, simulasi Unreal Engine 5, dan video editing 8K ProRes.",
+        "performance": {
+          "cinebench_r23": "34.500 Pts (Multi-Core)",
+          "cyberpunk_2077_rtx": "98 FPS (Ultra Ray-Tracing DLSS 3.5)",
+          "render_4k_10min": "2.1 Menit"
+        },
+        "installment_estimate": "Mulai Rp 1.187.500 / bulan (tenor 24x) atau Rp 2.375.000 / bulan (tenor 12x)"
+      },
+      {
+        "id": "zenbook",
+        "name": "ZenAir OLED 14",
+        "category": "Executive & Ultra-Slim AI Laptop",
+        "price_idr": 16900000,
+        "price_formatted": "Rp 16.900.000",
+        "specs_summary": "Intel Core Ultra 7 155H dengan NPU AI khusus, 16GB LPDDR5X, 1TB PCIe 4.0 SSD, 14\" 2.8K 120Hz Lumina OLED 500 nits, Bobot 1.1kg",
+        "best_for": "Pebisnis, eksekutif, manajer, programmer, dan kreator konten mobile yang membutuhkan laptop super tipis, elegan, dan baterai tahan hingga 15 jam.",
+        "performance": {
+          "cinebench_r23": "21.800 Pts (Multi-Core)",
+          "cyberpunk_2077_rtx": "38 FPS (Medium Setting)",
+          "render_4k_10min": "4.8 Menit"
+        },
+        "installment_estimate": "Mulai Rp 704.166 / bulan (tenor 24x) atau Rp 1.408.333 / bulan (tenor 12x)"
+      },
+      {
+        "id": "macbook",
+        "name": "MacBook Pro Studio M3 Max",
+        "category": "Creative Pro & Media Workstation",
+        "price_idr": 34900000,
+        "price_formatted": "Rp 34.900.000",
+        "specs_summary": "Apple M3 Max (14-Core CPU, 30-Core GPU), 36GB Unified Memory, 1TB Superfast SSD, 14.2\" Liquid Retina XDR 120Hz ProMotion 1600 nits peak",
+        "best_for": "Colorist profesional, editor video Premiere Pro/Final Cut Pro, produser musik, developer iOS/macOS, dan kreator visual tingkat studio.",
+        "performance": {
+          "cinebench_r23": "31.200 Pts (Multi-Core)",
+          "cyberpunk_2077_rtx": "62 FPS (Metal FX Upscaling)",
+          "render_4k_10min": "1.8 Menit (Tercepat di kelasnya)"
+        },
+        "installment_estimate": "Mulai Rp 1.454.166 / bulan (tenor 24x) atau Rp 2.908.333 / bulan (tenor 12x)"
+      },
+      {
+        "id": "swift",
+        "name": "Swift Go 14",
+        "category": "Best Value & Mahasiswa Juara",
+        "price_idr": 7800000,
+        "price_formatted": "Rp 7.800.000",
+        "specs_summary": "AMD Ryzen 5 7530U (6-Core, 12-Thread), 16GB Dual Channel RAM, 512GB NVMe SSD, 14\" FHD+ 100% sRGB 350 nits, Baterai 12 Jam",
+        "best_for": "Mahasiswa, pelajar, administrasi kantor, multitasking puluhan tab browser, coding pemula, dan multimedia santai.",
+        "performance": {
+          "cinebench_r23": "14.200 Pts (Multi-Core)",
+          "cyberpunk_2077_rtx": "28 FPS (720p Low FSR)",
+          "render_4k_10min": "8.5 Menit"
+        },
+        "installment_estimate": "Mulai Rp 325.000 / bulan (tenor 24x) atau Rp 650.000 / bulan (tenor 12x)"
+      }
+    ]
+  },
+  "qa_intents": [
+    {
+      "intent": "rekomendasi_gaming",
+      "keywords": ["gaming", "game", "fps", "rtx", "cyberpunk", "valorant", "gta", "dota", "berat"],
+      "response": "Untuk kebutuhan gaming rata kanan dan grafis berat, rekomendasi mutlak saya adalah **ROG Titan X Pro**! Ditenagai Intel Core i9-14900HX dan GPU NVIDIA GeForce RTX 4080 12GB GDDR6 (175W TGP). Layar 240Hz QHD+ memastikan visual sangat mulus tanpa screen tearing. Cyberpunk 2077 Ultra RTX berjalan stabil di ~98 FPS! Unit ini sedang ada diskon khusus di harga Rp 28.500.000. Apakah Anda ingin mencoba mode inspeksi 3D 360° unit ini?"
+    },
+    {
+      "intent": "rekomendasi_kantor_kuliah",
+      "keywords": ["kuliah", "mahasiswa", "kantor", "skripsi", "office", "budget", "murah", "pelajar", "ringan"],
+      "response": "Untuk kebutuhan kuliah, skripsi, dan administrasi kantor harian dengan budget terjangkau, pilihan nomor satu adalah **Swift Go 14** (Rp 7.800.000). Sudah dapat prosesor Ryzen 5 7530U, RAM 16GB besar yang anti-lemot untuk buka 30 tab Chrome bersamaan, layar 100% sRGB yang nyaman di mata, dan baterai awet hingga 12 jam. Sudah termasuk Windows 11 & Office original siap pakai!"
+    },
+    {
+      "intent": "rekomendasi_kreator_desain",
+      "keywords": ["desain", "editing", "video", "premiere", "photoshop", "kreator", "render", "blender", "macbook", "oled"],
+      "response": "Untuk dunia kreatif, kami punya dua opsi juara: Jika Anda pengguna ekosistem Apple, **MacBook Pro Studio M3 Max** (Rp 34.900.000) adalah standar emas dengan efisiensi render 4K tercepat (1.8 menit) dan layar Liquid Retina XDR 1600 nits. Jika mencari ultrabook Windows yang tipis dan layarnya spektakuler, pilih **ZenAir OLED 14** (Rp 16.900.000) dengan panel 2.8K Lumina OLED 100% DCI-P3!"
+    },
+    {
+      "intent": "tanya_cicilan",
+      "keywords": ["cicilan", "kredit", "angsuran", "bunga", "paylater", "kredivo", "bca", "mandiri", "kartu kredit"],
+      "response": "Ekalaya menyediakan fasilitas **Cicilan 0% tanpa biaya admin** melalui kartu kredit rekanan (BCA, Mandiri, BNI, BRI, Mega) dengan pilihan tenor 3, 6, 12, hingga 24 bulan. Contoh simulasi: Swift Go 14 hanya Rp 325.000/bulan (24x), atau ROG Titan X Pro hanya Rp 2.375.000/bulan (12x). Untuk pengguna tanpa kartu kredit, kami juga menerima SpayLater dan Kredivo resmi!"
+    },
+    {
+      "intent": "tanya_garansi",
+      "keywords": ["garansi", "rusak", "rusak air", "pecah", "adp", "service", "resmi", "distributor", "klaim"],
+      "response": "Semua laptop di Ekalaya dijamin **100% Original & Bergaransi Resmi Distributor Indonesia**. Selain garansi sparepart & servis resmi pabrikan 1-2 tahun, Anda juga mendapatkan bonus eksklusif **Accidental Damage Protection (ADP) gratis 1 tahun**. Jika laptop terjatuh, layar pecah, atau tersiram kopi secara tidak sengaja, biaya perbaikan ditanggung penuh oleh garansi!"
+    },
+    {
+      "intent": "tanya_promo_diskon",
+      "keywords": ["promo", "diskon", "voucher", "cashback", "bonus", "flash sale", "hadiah", "gratis"],
+      "response": "Hari ini kami sedang mengadakan event **Live Flash Sale** dengan diskon s/d 35%! Anda juga bisa mengklaim voucher potongan instan sebesar **Rp 500.000** menggunakan kode `EKALAYASALE500` di menu kasir/checkout, plus bonus paket aksesoris senilai Rp 1.200.000 (tas ransel water-resistant, mouse wireless silent, dan mousepad gaming XXL)!"
+    },
+    {
+      "intent": "tanya_stok_pengiriman",
+      "keywords": ["stok", "ready", "kirim", "ongkir", "packing", "gojek", "grab", "jabodetabek", "luar kota"],
+      "response": "Seluruh 4 model laptop unggulan kami **Ready Stock** di gudang utama Ekalaya. Kami melayani pengiriman Instant/Same-Day untuk area Jabodetabek. Untuk luar kota dan luar pulau Jawa, pengiriman gratis menggunakan ekspedisi rekanan dengan packing kayu berlapis dan asuransi pengiriman penuh 100% aman sampai di tempat Anda!"
+    }
+  ],
+  "lead_capture_trigger": {
+    "action": "Kumpulkan nama, nomor WhatsApp, dan unit laptop yang diminati.",
+    "closing_prompt": "Boleh saya minta nama dan nomor WhatsApp Anda? Saya akan langsung mengirimkan brosur perbandingan spek lengkap, pricelist terbaru, serta mengunci kuota voucher diskon Rp 500.000 untuk Anda hari ini!"
+  }
+}

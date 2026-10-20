@@ -196,15 +196,15 @@
     </div>
   </div>
 
-  <!-- Chat Assistant "Maya" Widget (Laptop Specialist) -->
+  <!-- Chat Assistant Frontliner "Maya" Widget (n8n AI Connected) -->
   <div class="chat-dock interactive-ui">
     <div id="chat-window" class="chat-window">
       <div class="chat-header">
         <div class="chat-header-info">
-          <div class="chat-avatar">🤖</div>
+          <div class="chat-avatar">👩‍💼</div>
           <div>
-            <h3>Maya — Laptop Specialist</h3>
-            <span class="chat-status">Konsultan Laptop Online</span>
+            <h3>Maya — Frontliner Officer</h3>
+            <span class="chat-status" id="frontliner-online-badge">🟢 n8n AI Online</span>
           </div>
         </div>
         <button id="chat-close-btn" class="chat-close-btn" aria-label="Tutup Chat">&times;</button>
@@ -212,25 +212,28 @@
 
       <div id="chat-messages" class="chat-messages">
         <div class="chat-bubble bubble-bot">
-          Halo! Selamat datang di Ekalaya Laptop Store. Sedang mencari laptop untuk gaming berat, kuliah, editing video, atau kerja kantoran? Tanyakan langsung ke saya!
+          Halo! Saya Maya, petugas Frontliner virtual Ekalaya yang terhubung langsung dengan workflow n8n AI. Ada yang bisa saya bantu terkait spek laptop (Gaming RTX, Ultrabook OLED, MacBook Pro, atau Kuliah), simulasi cicilan 0%, atau klaim garansi ADP?
         </div>
       </div>
 
       <div class="chat-suggestions">
-        <button class="suggestion-chip">Rekomendasi laptop gaming</button>
-        <button class="suggestion-chip">Simulasi cicilan kredit</button>
-        <button class="suggestion-chip">Laptop budget 7 jutaan</button>
+        <button class="suggestion-chip">🎮 Rekomendasi Gaming</button>
+        <button class="suggestion-chip">💼 Ultrabook Tipis</button>
+        <button class="suggestion-chip">💳 Cicilan 0%</button>
+        <button class="suggestion-chip">🛡️ Garansi ADP</button>
+        <button class="suggestion-chip">🔥 Promo Flash Sale</button>
       </div>
 
       <div class="chat-input-bar">
-        <input type="text" id="chat-input" placeholder="Tanya spek laptop, garansi, atau stok..." autocomplete="off">
+        <input type="text" id="chat-input" placeholder="Tanya spek laptop, garansi, atau cicilan..." autocomplete="off">
         <button id="chat-send-btn" aria-label="Kirim Pesan">➤</button>
       </div>
     </div>
 
     <!-- Chat Floating Trigger Button -->
-    <button id="chat-trigger-btn" class="chat-trigger-btn" title="Chat dengan Maya">
+    <button id="chat-trigger-btn" class="chat-trigger-btn" title="Konsultasi dengan Frontliner Maya (n8n AI)">
       <span>💬</span>
+      <span class="frontliner-dock-badge">Maya AI</span>
       <span class="chat-pulse"></span>
     </button>
   </div>

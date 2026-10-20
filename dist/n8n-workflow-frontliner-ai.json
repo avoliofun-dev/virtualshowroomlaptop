@@ -1,0 +1,151 @@
+{
+  "name": "Ekalaya Laptop Store - Frontliner Maya AI Consultant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ekalaya-frontliner",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-frontliner-trigger",
+      "name": "Frontliner Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Knowledge Base & Respon Cerdas Frontliner Maya (Ekalaya Laptop Store)\nconst input = $json.body || $json;\nconst userMessage = (input.message || '').toLowerCase();\nconst visitorName = input.clientName || 'Sahabat Ekalaya';\nconst visitorWA = input.clientWhatsapp || '-';\n\nconst catalog = {\n  rog: {\n    title: 'ROG Titan X Pro',\n    price: 'Rp 28.500.000',\n    badge: 'Gaming & 3D Render Beast',\n    cpu: 'Intel Core i9-14900HX',\n    gpu: 'NVIDIA RTX 4080 12GB (175W)',\n    display: '16\" QHD+ 240Hz 500 nits'\n  },\n  zenbook: {\n    title: 'ZenAir OLED 14',\n    price: 'Rp 16.900.000',\n    badge: 'Ultra-Slim Executive & AI',\n    cpu: 'Intel Core Ultra 7 155H + NPU AI',\n    gpu: 'Intel Arc Graphics',\n    display: '14\" 2.8K 120Hz Lumina OLED, 1.1kg'\n  },\n  macbook: {\n    title: 'MacBook Pro Studio M3 Max',\n    price: 'Rp 34.900.000',\n    badge: 'Creative Pro Workstation',\n    cpu: 'Apple M3 Max 14-Core',\n    gpu: '30-Core GPU Metal 3',\n    display: '14.2\" Liquid Retina XDR 1600 nits'\n  },\n  swift: {\n    title: 'Swift Go 14',\n    price: 'Rp 7.800.000',\n    badge: 'Best Value & Kuliah',\n    cpu: 'AMD Ryzen 5 7530U',\n    gpu: 'Radeon Vega Graphics',\n    display: '14\" FHD+ 100% sRGB, Baterai 12 Jam'\n  }\n};\n\nlet reply = '';\nlet suggestedId = 'rog';\nlet isLeadCaptured = false;\n\n// 1. Deteksi Niat / Intent Pengunjung\nif (userMessage.includes('gaming') || userMessage.includes('fps') || userMessage.includes('rtx') || userMessage.includes('cyberpunk') || userMessage.includes('game')) {\n  suggestedId = 'rog';\n  reply = `Halo Kak ${visitorName}! Untuk kebutuhan gaming rata-kanan dan performa grafis tinggi, rekomendasi mutlak saya adalah **ROG Titan X Pro** (Rp 28.500.000). Ditenagai Core i9-14900HX dan RTX 4080 12GB (175W TGP). Cyberpunk 2077 Ultra RTX tembus 98 FPS stabil dengan layar 240Hz. Kakak bisa klik tombol Inspeksi 3D 360° untuk melihat fisik unitnya secara detail!`;\n} else if (userMessage.includes('kuliah') || userMessage.includes('mahasiswa') || userMessage.includes('kantor') || userMessage.includes('murah') || userMessage.includes('budget') || userMessage.includes('pelajar')) {\n  suggestedId = 'swift';\n  reply = `Halo Kak ${visitorName}! Untuk kuliah, tugas skripsi, dan administrasi kantor, **Swift Go 14** (Rp 7.800.000) adalah pilihan paling hemat dan tangguh. RAM 16GB besar anti-lemot, prosesor Ryzen 5 7530U yang adem, dan baterai awet hingga 12 jam. Sudah gratis Windows 11 & Office original seumur hidup!`;\n} else if (userMessage.includes('editing') || userMessage.includes('desain') || userMessage.includes('render') || userMessage.includes('video') || userMessage.includes('macbook') || userMessage.includes('oled') || userMessage.includes('kreatif')) {\n  suggestedId = 'macbook';\n  reply = `Untuk kebutuhan konten kreator dan visual profesional, **MacBook Pro Studio M3 Max** (Rp 34.900.000) adalah juaranya dengan efisiensi render 4K hanya 1.8 menit dan layar XDR 1600 nits. Namun jika mencari laptop Windows yang super tipis dan layarnya OLED memukau, **ZenAir OLED 14** (Rp 16.900.000) dengan bobot cuma 1.1kg juga sangat luar biasa!`;\n} else if (userMessage.includes('cicilan') || userMessage.includes('kredit') || userMessage.includes('angsuran') || userMessage.includes('bunga') || userMessage.includes('paylater') || userMessage.includes('kredivo')) {\n  suggestedId = 'zenbook';\n  reply = `Ekalaya menyediakan fasilitas **Cicilan 0% bebas biaya admin** melalui kartu kredit rekanan (BCA, Mandiri, BNI, BRI) hingga 24 bulan. Simulasi angsuran: Swift Go 14 cuma Rp 325.000/bln, ZenAir OLED Rp 704.000/bln, dan ROG Titan X Rp 1.187.000/bln. Kami juga menerima SpayLater dan Kredivo resmi tanpa kartu kredit!`;\n} else if (userMessage.includes('garansi') || userMessage.includes('adp') || userMessage.includes('rusak') || userMessage.includes('air') || userMessage.includes('pecah')) {\n  suggestedId = 'rog';\n  reply = `Semua unit di Ekalaya bergaransi resmi distributor Indonesia 1-2 tahun. Plus, kami berikan bonus eksklusif **Accidental Damage Protection (ADP) gratis 1 tahun** — menanggung kerusakan akibat ketumpahan air, jatuh, atau lonjakan listrik tanpa biaya tambahan!`;\n} else if (userMessage.includes('promo') || userMessage.includes('diskon') || userMessage.includes('voucher') || userMessage.includes('flash sale')) {\n  suggestedId = 'rog';\n  reply = `Spesial hari ini ada event **Flash Sale Ekalaya** dengan potongan langsung s/d 35%! Gunakan voucher promo kode \`EKALAYASALE500\` saat checkout untuk cashback instan Rp 500.000 + bonus paket ransel, mouse wireless, dan mousepad gaming XXL senilai Rp 1.200.000!`;\n} else {\n  suggestedId = 'zenbook';\n  reply = `Halo Kak ${visitorName}! Saya Maya dari meja Frontliner Ekalaya Laptop Store. Kami menyediakan laptop Gaming RTX bertenaga monster, Ultrabook OLED super tipis 1.1kg, MacBook Pro M3 Max untuk kreator, hingga laptop kuliah mahasiswa. Ada kisaran anggaran atau kebutuhan spesifik yang sedang Kakak rencanakan?`;\n}\n\n// Cek jika ada nomor kontak yang masuk\nif (visitorWA !== '-' && visitorWA.length > 8) {\n  isLeadCaptured = true;\n}\n\nreturn {\n  success: true,\n  botName: 'Maya (Ekalaya Frontliner AI)',\n  reply: reply,\n  suggestedLaptop: catalog[suggestedId],\n  isLeadCaptured: isLeadCaptured,\n  clientName: visitorName,\n  clientWhatsapp: visitorWA,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-frontliner-intelligence",
+      "name": "Maya AI Knowledge Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isLeadCaptured }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-lead-captured",
+      "name": "Apakah Pengunjung Menyimpan Kontak?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        680,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format notifikasi instan WhatsApp / Telegram ke Pemilik Toko\nconst lead = $json;\nconst pesanWA = `🔥 *LEAD BARU DARI FRONTLINER MAYA 3D*\\\\n` +\n  `Nama: ${lead.clientName}\\\\n` +\n  `WhatsApp: ${lead.clientWhatsapp}\\\\n` +\n  `Minat Unit: ${lead.suggestedLaptop.title} (${lead.suggestedLaptop.price})\\\\n` +\n  `Status: *HOT PROSPECT (Siap Follow-up)*\\\\n` +\n  `Waktu: ${new Date().toLocaleString('id-ID')}\\\\n` +\n  `Catatan: Pengunjung aktif berkonsultasi langsung di showroom virtual.`;\n\nreturn {\n  ...lead,\n  ownerNotification: pesanWA,\n  channel: 'WhatsApp Sales Team'\n};"
+      },
+      "id": "code-format-owner-lead",
+      "name": "Format Lead untuk Tim Sales",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": {{ $json.success }},\n  \"botName\": \"{{ $json.botName }}\",\n  \"reply\": \"{{ $json.reply }}\",\n  \"suggestedLaptop\": {{ JSON.stringify($json.suggestedLaptop) }},\n  \"timestamp\": \"{{ $json.timestamp }}\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-to-webhook",
+      "name": "Kirim Respon ke Frontliner Web",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        340
+      ]
+    }
+  ],
+  "connections": {
+    "Frontliner Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Maya AI Knowledge Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Maya AI Knowledge Engine": {
+      "main": [
+        [
+          {
+            "node": "Apakah Pengunjung Menyimpan Kontak?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apakah Pengunjung Menyimpan Kontak?": {
+      "main": [
+        [
+          {
+            "node": "Format Lead untuk Tim Sales",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kirim Respon ke Frontliner Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Lead untuk Tim Sales": {
+      "main": [
+        [
+          {
+            "node": "Kirim Respon ke Frontliner Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
