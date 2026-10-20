@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ekalaya Laptop Hub — 3D Virtual Showroom & Store</title>
+  <meta name="description" content="Showroom dan toko laptop 3D interaktif berbasis browser. Jelajahi laptop gaming RTX, ultrabook tipis, workstation kreator, dan laptop kuliah bergaransi resmi.">
+  <meta name="theme-color" content="#07090e">
+
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 3D Canvas Layer -->
+  <div id="canvas-container"></div>
+
+  <!-- HUD Overlay Layer -->
+  <div class="hud-layer">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav interactive-ui">
+      <!-- Brand Logo & Badge -->
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="brand-badge glass-panel">
+          <div class="brand-logo-icon">💻</div>
+          <div class="brand-text">
+            <h1>Ekalaya <span class="brand-badge-tag">Laptop Store</span></h1>
+            <p>3D Virtual Showroom & Store</p>
+          </div>
+        </div>
+
+        <!-- Live Flash Sale Countdown Ticker (Tahap 3) -->
+        <div id="flash-sale-badge" class="flash-sale-ticker glass-panel" title="Klik untuk pasang pengingat Flash Sale via WA">
+          <span>🔥 Flash Sale:</span>
+          <span id="countdown-timer" class="countdown-box">04:28:15</span>
+          <span style="opacity: 0.85;">Diskon s/d 35%</span>
+        </div>
+      </div>
+
+      <!-- Fast Travel Room Navigation Pills -->
+      <nav class="room-nav-pills glass-panel" aria-label="Navigasi Showroom Laptop">
+        <button class="nav-pill active" data-zone="lobby">
+          <span>👋</span> Lobby
+        </button>
+        <button class="nav-pill" data-zone="display">
+          <span>⚡</span> Laptop Showcase
+        </button>
+        <button class="nav-pill" data-zone="meeting">
+          <span>📊</span> Benchmark Studio
+        </button>
+        <button class="nav-pill" data-zone="lounge">
+          <span>🎧</span> Aksesori
+        </button>
+        <button class="nav-pill" data-zone="promo">
+          <span>🎁</span> Promo
+        </button>
+      </nav>
+    </header>
+
+    <!-- Right-Side Floating Control Dock (Urut dari Bawah ke Atas, Bisa Disembunyikan/Ditampilkan) -->
+    <div id="right-control-dock" class="right-control-dock interactive-ui">
+      <!-- Master Toggle Trigger (Paling Bawah) -->
+      <button id="btn-toggle-dock" class="dock-toggle-btn active" title="Sembunyikan / Tampilkan Menu Pengaturan">
+        <span class="toggle-icon">⚙️</span>
+        <span class="dock-tooltip">Menu Alat</span>
+      </button>
+
+      <!-- Action Items (Diurutkan dari Bawah ke Atas) -->
+      <div id="dock-action-items" class="dock-action-items">
+        <!-- 1. Webhook n8n Settings -->
+        <button id="btn-settings" class="action-btn-circle" title="Konfigurasi Webhook n8n">
+          <span>🔧</span>
+          <span class="dock-tooltip">Webhook n8n</span>
+        </button>
+
+        <!-- 2. Audio Ambience Toggle -->
+        <button id="btn-toggle-audio" class="action-btn-circle" title="Aktifkan Musik Showroom">
+          <span id="audio-icon-span">🔇</span>
+          <span class="dock-tooltip">Musik Ambience</span>
+        </button>
+
+        <!-- 3. Mode 2D/3D Switcher -->
+        <button id="btn-toggle-mode" class="action-btn-circle" title="Mode 2D / 3D">
+          <span id="mode-icon-span">📄</span>
+          <span class="dock-tooltip">Katalog 2D/3D</span>
+        </button>
+
+        <!-- 4. Mode Cerah / Gelap -->
+        <button id="btn-toggle-theme" class="action-btn-circle" title="Mode Cerah / Gelap">
+          <span id="theme-icon-span">🌙</span>
+          <span class="dock-tooltip">Mode Cerah/Gelap</span>
+        </button>
+
+        <!-- 5. Fullscreen Toggle -->
+        <button id="btn-toggle-fullscreen" class="action-btn-circle" title="Layar Penuh (Fullscreen)">
+          <span id="fs-icon-span">⛶</span>
+          <span class="dock-tooltip">Layar Penuh</span>
+        </button>
+
+        <!-- 6. Kustomisasi Avatar (Tahap 4) -->
+        <button id="btn-wardrobe" class="action-btn-circle" title="Kustomisasi Avatar 3D">
+          <span>👔</span>
+          <span class="dock-tooltip">Ganti Pakaian</span>
+        </button>
+
+        <!-- 7. Owner Analytics Dashboard -->
+        <button id="btn-owner-dashboard" class="action-btn-circle" title="Dashboard Analitik (n8n)">
+          <span>📊</span>
+          <span class="dock-tooltip">Analitik Toko</span>
+        </button>
+
+        <!-- 7. Spec Matcher Wizard -->
+        <button id="btn-spec-wizard" class="action-btn-circle" title="Cari Rekomendasi Laptop">
+          <span>🎯</span>
+          <span class="dock-tooltip">Cari Spek</span>
+        </button>
+
+        <!-- 8. Main CTA Konsultasi (Paling Atas) -->
+        <button id="btn-header-cta" class="action-btn-circle btn-cta-dock" title="Konsultasi Pembelian">
+          <span>🛒</span>
+          <span class="dock-tooltip">Konsultasi</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Bar / HUD -->
+    <footer class="bottom-bar">
+      <!-- Movement & Camera Hints -->
+      <div class="controls-hint glass-panel interactive-ui">
+        <div>
+          <span class="key-badge">W</span> <span class="key-badge">A</span> <span class="key-badge">S</span> <span class="key-badge">D</span> Jalan
+        </div>
+        <div style="opacity: 0.6;">•</div>
+        <div><span class="key-badge">🖱️ Kiri</span> Putar Rotasi</div>
+        <div style="opacity: 0.6;">•</div>
+        <div><span class="key-badge">🖱️ Kanan</span> Geser Panorama</div>
+        <div style="opacity: 0.6;">•</div>
+        <div><span class="key-badge">Scroll</span> Zoom In/Out</div>
+        <div style="opacity: 0.6;">•</div>
+        <div>Dekati pedestal / tekan <span class="key-badge">E</span></div>
+      </div>
+
+      <!-- Minimap HUD -->
+      <div class="minimap-panel glass-panel interactive-ui">
+        <div class="minimap-title">Store Radar</div>
+        <canvas id="minimap-canvas" width="110" height="110"></canvas>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Dynamic Proximity Prompt Banner (appears when near a zone) -->
+  <div id="interaction-prompt" class="interaction-prompt-container">
+    <div class="interaction-card">
+      <h4 id="prompt-title">💻 Lobby & Tech Concierge</h4>
+      <p id="prompt-desc">Konsultasi Rekomendasi Laptop & Buku Tamu</p>
+      <button class="interaction-btn-mini">Buka Menu (Tekan E / Klik)</button>
+    </div>
+  </div>
+
+  <!-- Mobile Virtual Joystick -->
+  <div id="mobile-controls">
+    <div id="joystick-base" class="joystick-base">
+      <div id="joystick-thumb" class="joystick-thumb"></div>
+    </div>
+  </div>
+
+  <!-- Chat Assistant "Maya" Widget (Laptop Specialist) -->
+  <div class="chat-dock interactive-ui">
+    <div id="chat-window" class="chat-window">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar">🤖</div>
+          <div>
+            <h3>Maya — Laptop Specialist</h3>
+            <span class="chat-status">Konsultan Laptop Online</span>
+          </div>
+        </div>
+        <button id="chat-close-btn" class="chat-close-btn" aria-label="Tutup Chat">&times;</button>
+      </div>
+
+      <div id="chat-messages" class="chat-messages">
+        <div class="chat-bubble bubble-bot">
+          Halo! Selamat datang di Ekalaya Laptop Store. Sedang mencari laptop untuk gaming berat, kuliah, editing video, atau kerja kantoran? Tanyakan langsung ke saya!
+        </div>
+      </div>
+
+      <div class="chat-suggestions">
+        <button class="suggestion-chip">Rekomendasi laptop gaming</button>
+        <button class="suggestion-chip">Simulasi cicilan kredit</button>
+        <button class="suggestion-chip">Laptop budget 7 jutaan</button>
+      </div>
+
+      <div class="chat-input-bar">
+        <input type="text" id="chat-input" placeholder="Tanya spek laptop, garansi, atau stok..." autocomplete="off">
+        <button id="chat-send-btn" aria-label="Kirim Pesan">➤</button>
+      </div>
+    </div>
+
+    <!-- Chat Floating Trigger Button -->
+    <button id="chat-trigger-btn" class="chat-trigger-btn" title="Chat dengan Maya">
+      <span>💬</span>
+      <span class="chat-pulse"></span>
+    </button>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal 1: Lobby / Resepsionis (Lead Capture Form for n8n) -->
+  <div id="modal-reception" class="modal-overlay">
+    <div class="modal-box glass-panel">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <h2>👋 Konsultasi Pembelian Laptop</h2>
+        <p>Beri tahu kami kebutuhan Anda! Tim kami akan mencarikan laptop terbaik dengan harga promo dan garansi resmi.</p>
+      </div>
+
+      <form id="lead-form">
+        <div class="form-group">
+          <label for="lead-name">Nama Lengkap</label>
+          <input type="text" id="lead-name" name="fullName" class="form-control" placeholder="Contoh: Narendra Pratama" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="lead-contact">WhatsApp / Email</label>
+            <input type="text" id="lead-contact" name="contact" class="form-control" placeholder="0812xxxx atau email" required>
+          </div>
+          <div class="form-group">
+            <label for="lead-laptop">Kategori Kebutuhan</label>
+            <select id="lead-laptop" name="laptopInterest" class="form-control">
+              <option value="Laptop Gaming & 3D Render">Laptop Gaming & Render (RTX Series)</option>
+              <option value="Ultrabook Tipis & Ringan">Ultrabook Tipis & Baterai Awet</option>
+              <option value="MacBook / Kreator Studio">MacBook / Creator Studio Pro</option>
+              <option value="Laptop Kuliah & Pelajar">Laptop Kuliah & Kerja Harian (Value)</option>
+              <option value="Pengadaan Kantor / B2B">Pengadaan Jumlah Banyak (B2B/Kantor)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="lead-budget">Rencana Budget Pembelian</label>
+          <select id="lead-budget" name="budget" class="form-control">
+            <option value="Rp 6jt - 10jt">Rp 6.000.000 - Rp 10.000.000</option>
+            <option value="Rp 10jt - 18jt">Rp 10.000.000 - Rp 18.000.000</option>
+            <option value="Rp 18jt - 30jt">Rp 18.000.000 - Rp 30.000.000</option>
+            <option value="> Rp 30jt">> Rp 30.000.000 (High-End Enthusiast)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="lead-notes">Software / Game Khusus yang Ingin Dijalankan (Opsional)</label>
+          <textarea id="lead-notes" name="notes" class="form-control" rows="2" placeholder="Contoh: Premiere Pro 4K, Blender, Cyberpunk 2077, AutoCAD..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <span>🚀</span> Kirim Konsultasi & Klaim Bonus Aksesori
+        </button>
+
+        <div id="lead-status" class="form-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Laptop Showcase Arena -->
+  <div id="modal-services" class="modal-overlay">
+    <div class="modal-box glass-panel" style="max-width: 760px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <span class="spec-chip" style="background: rgba(0, 242, 254, 0.2); color: var(--primary);">Katalog Unggulan 2026</span>
+        <h2>⚡ Laptop Showcase Arena</h2>
+        <p>Pilihan laptop terbaik bergaransi resmi Indonesia. Klik <strong>Beli Sekarang</strong> untuk membuat invoice instan atau chat via WhatsApp.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+        <!-- Laptop 1 -->
+        <div class="laptop-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="color: #ff0055; font-size: 0.95rem;">🔥 ROG Titan X Pro</strong>
+            <span class="spec-chip">Gaming</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Core i9-14900HX • RTX 4080 12GB • 32GB DDR5 • 240Hz QHD+</div>
+          <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 28.500.000</div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('rog')">
+              ⚡ Beli Sekarang
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20ROG%20Titan%20X%20Pro')">
+              Tanya WA
+            </button>
+          </div>
+        </div>
+
+        <!-- Laptop 2 -->
+        <div class="laptop-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="color: var(--primary); font-size: 0.95rem;">✨ ZenAir OLED 14</strong>
+            <span class="spec-chip">Ultrabook</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Core Ultra 7 AI • 16GB RAM • 1TB SSD • 2.8K OLED • 1.1kg</div>
+          <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 16.900.000</div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('zenbook')">
+              ⚡ Beli Sekarang
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20ZenAir%20OLED%2014')">
+              Tanya WA
+            </button>
+          </div>
+        </div>
+
+        <!-- Laptop 3 -->
+        <div class="laptop-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="color: #9d4edd; font-size: 0.95rem;">🍏 MacBook Studio M3</strong>
+            <span class="spec-chip">Creator</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Apple M3 Max 14-Core • 36GB Unified RAM • 1TB SSD • XDR Display</div>
+          <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 34.900.000</div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('macbook')">
+              ⚡ Beli Sekarang
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20MacBook%20Pro%20M3%20Max')">
+              Tanya WA
+            </button>
+          </div>
+        </div>
+
+        <!-- Laptop 4 -->
+        <div class="laptop-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="color: var(--success); font-size: 0.95rem;">⚡ Swift Go 14</strong>
+            <span class="spec-chip">Best Value</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px;">Ryzen 5 7530U • 16GB RAM • 512GB SSD • 100% sRGB • Baterai 12 Jam</div>
+          <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Rp 7.800.000</div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-submit" style="flex: 1; padding: 7px; font-size: 0.75rem;" onclick="startLaptopCheckout('swift')">
+              ⚡ Beli Sekarang
+            </button>
+            <button class="action-btn" style="flex: 1; justify-content: center; font-size: 0.75rem; padding: 7px;" onclick="window.open('https://wa.me/?text=Halo%20Ekalaya%20Laptop,%20saya%20tertarik%20dengan%20Swift%20Go%2014')">
+              Tanya WA
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2B: Checkout & Instant Invoice Simulator (Tahap 2) -->
+  <div id="modal-checkout" class="modal-overlay">
+    <div class="modal-box glass-panel" style="max-width: 600px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      
+      <!-- Checkout Step 1: Form Pemesanan -->
+      <div id="checkout-step-form">
+        <div class="modal-header">
+          <span class="spec-chip" style="background: rgba(0, 245, 155, 0.15); color: var(--success);">Pemesanan Cepat (Tahap 2)</span>
+          <h2 id="checkout-laptop-title">Checkout Pesanan Laptop</h2>
+          <p id="checkout-laptop-subtitle">Lengkapi identitas untuk penerbitan Invoice Digital & pengiriman asuransi.</p>
+        </div>
+
+        <form id="order-form">
+          <input type="hidden" id="order-laptop-id" name="laptopId">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="order-name">Nama Penerima</label>
+              <input type="text" id="order-name" name="buyerName" class="form-control" placeholder="Nama lengkap" required>
+            </div>
+            <div class="form-group">
+              <label for="order-whatsapp">WhatsApp (Untuk Invoice & Resi)</label>
+              <input type="tel" id="order-whatsapp" name="buyerWhatsapp" class="form-control" placeholder="08xxxxxxxxxx" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="order-address">Alamat Lengkap Pengiriman</label>
+            <input type="text" id="order-address" name="buyerAddress" class="form-control" placeholder="Jl. Mawar No. 12, Kelurahan, Kota, Kode Pos" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="order-payment">Metode Pembayaran</label>
+              <select id="order-payment" name="paymentMethod" class="form-control">
+                <option value="QRIS Instant (BCA, GoPay, OVO, Dana)">QRIS Instant (Semua Bank / E-Wallet)</option>
+                <option value="Virtual Account BCA / Mandiri">Virtual Account BCA / Mandiri</option>
+                <option value="Kartu Kredit / Cicilan 0%">Kartu Kredit Cicilan 0%</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="order-voucher">Kode Kupon / Voucher</label>
+              <input type="text" id="order-voucher" name="voucherCode" class="form-control" placeholder="Misal: EKALAYA-LAPTOP-500K">
+            </div>
+          </div>
+
+          <div style="background: rgba(125,125,125,0.06); padding: 14px; border-radius: var(--radius-md); margin-bottom: 18px; border: 1px solid var(--border-glass);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+              <span id="summary-laptop-name">ROG Titan X Pro</span>
+              <strong id="summary-laptop-price">Rp 28.500.000</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--success); margin-bottom: 6px;">
+              <span>Gratis Ongkir + Asuransi Packing Kayu</span>
+              <span>Rp 0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 800; color: var(--primary); padding-top: 6px; border-top: 1px dashed var(--border-glass);">
+              <span>Total Pembayaran</span>
+              <span id="summary-total-price">Rp 28.500.000</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            <span>📄</span> Buat Invoice & Lanjut Pembayaran
+          </button>
+        </form>
+      </div>
+
+      <!-- Checkout Step 2: Live Digital Invoice & Payment Simulation -->
+      <div id="checkout-step-invoice" style="display: none;">
+        <div class="modal-header" style="text-align: center;">
+          <div style="font-size: 2.2rem; margin-bottom: 4px;">✅</div>
+          <span class="spec-chip" id="invoice-status-chip" style="background: rgba(255, 190, 11, 0.2); color: var(--warning);">
+            MENUNGGU PEMBAYARAN
+          </span>
+          <h2 style="margin-top: 8px;">Invoice Digital Resmi</h2>
+          <p id="invoice-number-tag" style="font-family: monospace; font-size: 0.88rem; color: var(--primary);">
+            INV-EKL-2026-9281
+          </p>
+        </div>
+
+        <div style="background: rgba(125,125,125,0.06); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px; margin-bottom: 18px; font-size: 0.82rem; line-height: 1.6;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Pembeli:</span>
+            <strong id="inv-buyer-name">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">WhatsApp:</span>
+            <span id="inv-buyer-whatsapp">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Unit Laptop:</span>
+            <strong id="inv-laptop-item">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border-glass);">
+            <strong style="color: var(--text-main);">Total Tagihan:</strong>
+            <strong id="inv-final-price" style="color: var(--primary);">-</strong>
+          </div>
+        </div>
+
+        <!-- Payment Method Tabs: QRIS & Cicilan 0% (Tahap 4) -->
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button id="tab-pay-qris" class="action-btn active" style="flex: 1; justify-content: center; font-size: 0.78rem;">
+            ⚡ QRIS Instan
+          </button>
+          <button id="tab-pay-cicilan" class="action-btn" style="flex: 1; justify-content: center; font-size: 0.78rem;">
+            💳 Cicilan 0% Bank
+          </button>
+        </div>
+
+        <!-- Simulated QRIS Gateway Box -->
+        <div id="payment-gateway-box" style="text-align: center; background: rgba(0, 242, 254, 0.05); border: 1px solid var(--primary); border-radius: var(--radius-md); padding: 18px; margin-bottom: 18px;">
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">
+            Silakan scan QRIS di bawah ini melalui BCA / Mandiri / GoPay / OVO:
+          </div>
+          <div style="display: inline-block; background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px;">
+            <svg width="120" height="120" viewBox="0 0 100 100" fill="#000">
+              <path d="M10 10h30v30h-30z M15 15h20v20h-20z M60 10h30v30h-30z M65 15h20v20h-20z M10 60h30v30h-30z M15 65h20v20h-20z M45 10h10v10h-10z M45 30h10v10h-10z M45 50h10v10h-10z M10 45h10v10h-10z M30 45h10v10h-10z M50 45h10v10h-10z M60 60h10v10h-10z M80 60h10v10h-10z M70 70h10v10h-10z M60 80h10v10h-10z M80 80h10v10h-10z"/>
+            </svg>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">
+            Batas waktu pembayaran: <strong style="color: var(--warning);">14:59</strong>
+          </div>
+        </div>
+
+        <!-- Cicilan 0% Simulator Box (Tahap 4) -->
+        <div id="payment-cicilan-box" style="display: none; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 16px; margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">Pilihan Tenor Cicilan 0%:</span>
+            <span style="font-size: 0.72rem; color: var(--success); font-weight: 700;">Bunga 0% Resmi</span>
+          </div>
+          <div class="installment-grid">
+            <div class="installment-card" data-months="3">
+              <div class="installment-months">3 Bulan</div>
+              <div class="installment-val" id="inst-val-3">-</div>
+            </div>
+            <div class="installment-card" data-months="6">
+              <div class="installment-months">6 Bulan</div>
+              <div class="installment-val" id="inst-val-6">-</div>
+            </div>
+            <div class="installment-card active" data-months="12">
+              <div class="installment-months">12 Bulan</div>
+              <div class="installment-val" id="inst-val-12">-</div>
+            </div>
+            <div class="installment-card" data-months="24">
+              <div class="installment-months">24 Bulan</div>
+              <div class="installment-val" id="inst-val-24">-</div>
+            </div>
+          </div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px;">
+            Partner Bank: BCA, Mandiri, BNI, BRI, Mega, serta SpayLater & Kredivo.
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button id="btn-simulate-paid" class="btn-submit" style="background: linear-gradient(135deg, #00f59b, #00f2fe);">
+            ⚡ Simulasikan Pembayaran Berhasil
+          </button>
+          <button class="action-btn" style="flex: 1; justify-content: center;" onclick="document.getElementById('modal-checkout').classList.remove('active');">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Benchmark & Demo Studio (Tahap 3 Upgraded) -->
+  <div id="modal-meeting" class="modal-overlay">
+    <div class="modal-box glass-panel" style="max-width: 680px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <span class="spec-chip" style="background: rgba(255, 190, 11, 0.2); color: var(--warning);">Benchmark & Tes Nyata</span>
+        <h2>📊 Benchmark & Performa Komparasi</h2>
+        <p>Pilih game atau aplikasi di bawah ini untuk melihat perbandingan performa FPS dan kecepatan render secara langsung:</p>
+      </div>
+
+      <!-- Game/App Selector Tabs -->
+      <div class="benchmark-game-tabs">
+        <button class="bench-tab-btn active" data-game="cyberpunk">Cyberpunk 2077 (Ultra RT)</button>
+        <button class="bench-tab-btn" data-game="valorant">Valorant (1080p Comp)</button>
+        <button class="bench-tab-btn" data-game="blender">Blender 3D BMW Render</button>
+        <button class="bench-tab-btn" data-game="premiere">Premiere Pro 4K Export</button>
+      </div>
+
+      <!-- Live Performance Bars -->
+      <div id="benchmark-meters-container" style="margin-bottom: 22px;"></div>
+
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-submit" onclick="document.getElementById('modal-meeting').classList.remove('active'); document.getElementById('modal-booking-demo').classList.add('active');">
+          📅 Jadwalkan Demo Live Sesi Khusus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3B: Booking Form Demo Khusus -->
+  <div id="modal-booking-demo" class="modal-overlay">
+    <div class="modal-box glass-panel">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <h2>📅 Reservasi Demo Live Video Call</h2>
+        <p>Konsultasi 1-on-1 dengan teknisi kami untuk pengujian software pilihan Anda.</p>
+      </div>
+
+      <form id="meeting-form">
+        <div class="form-group">
+          <label for="meet-name">Nama Pemohon</label>
+          <input type="text" id="meet-name" name="clientName" class="form-control" placeholder="Contoh: Narendra" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="meet-date">Pilih Tanggal Demo</label>
+            <input type="date" id="meet-date" name="meetingDate" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="meet-time">Pilih Jam</label>
+            <select id="meet-time" name="meetingTime" class="form-control">
+              <option value="11:00 WIB">11:00 WIB</option>
+              <option value="14:00 WIB">14:00 WIB</option>
+              <option value="16:30 WIB">16:30 WIB</option>
+              <option value="19:30 WIB">19:30 WIB</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="meet-contact">Nomor WhatsApp Konfirmasi</label>
+          <input type="tel" id="meet-contact" name="clientWhatsapp" class="form-control" placeholder="08xxxxxxxxxx" required>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <span>📅</span> Konfirmasi Reservasi Jadwal
+        </button>
+
+        <div id="meeting-status" class="form-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Accessories & Customer Hub -->
+  <div id="modal-lounge" class="modal-overlay">
+    <div class="modal-box glass-panel">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <h2>🎧 Aksesori & Testimoni Pelanggan</h2>
+        <p>Lengkapi laptop Anda dengan aksesori original dan baca ulasan nyata dari pembeli Ekalaya Laptop Store.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
+        <div style="padding: 12px 16px; background: rgba(125,125,125,0.06); border-radius: var(--radius-md); border-left: 3px solid var(--primary);">
+          <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 4px;">"Beli ROG Titan X di Ekalaya pengirimannya super aman kayu + asuransi. Pelayanannya cepat dan dapat bonus mouse gaming!"</div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">— Alvin K., 3D Game Developer</div>
+        </div>
+
+        <div style="padding: 12px 16px; background: rgba(125,125,125,0.06); border-radius: var(--radius-md); border-left: 3px solid var(--success);">
+          <div style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 4px;">"ZenAir OLED-nya mantap banget buat presentasi ke klien. Ringan dan layarnya juara. Konsultasi sama Maya juga ramah banget."</div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700;">— Nadia S., Brand Strategist</div>
+        </div>
+      </div>
+
+      <button class="btn-submit" onclick="document.getElementById('modal-lounge').classList.remove('active'); document.getElementById('modal-reception').classList.add('active');">
+        Konsultasi Pembelian Laptop
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 5: Promo, Referral VIP & Loyalty Vault (Tahap 4) -->
+  <div id="modal-promo" class="modal-overlay">
+    <div class="modal-box glass-panel" style="max-width: 580px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div style="text-align: center; margin-bottom: 16px;">
+        <span class="spec-chip" style="background: rgba(0, 245, 155, 0.2); color: var(--success);">Program Referral & Loyalty</span>
+        <h2 style="font-family: var(--font-heading); margin-top: 4px;">🎁 Promo, Kupon & Program VIP</h2>
+        <p style="color: var(--text-muted); font-size: 0.82rem;">
+          Dapatkan voucher diskon, komisi uang tunai program referral, dan benefit member loyalitas Ekalaya.
+        </p>
+      </div>
+
+      <!-- Voucher Box -->
+      <div style="padding: 14px 18px; background: rgba(0, 245, 155, 0.08); border: 1px dashed var(--success); border-radius: var(--radius-md); margin-bottom: 16px; text-align: center;">
+        <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--success); font-weight: 700; letter-spacing: 1px;">Kupon Belanja Laptop Aktif</span>
+        <div style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--text-main); letter-spacing: 2px; margin: 4px 0 8px 0;">
+          EKALAYA-LAPTOP-500K
+        </div>
+        <button id="btn-copy-promo" class="btn-submit" style="background: linear-gradient(135deg, #00f59b, #00f2fe); padding: 5px 16px; font-size: 0.76rem; margin: 0 auto; display: inline-block;">
+          📋 Salin Kode Voucher Rp 500.000
+        </button>
+      </div>
+
+      <!-- VIP Referral Generator Box -->
+      <div class="referral-box">
+        <h4 style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 4px;">🤝 Program Referral Ekalaya VIP</h4>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
+          Bagikan rekomendasi ke teman Anda. Teman Anda mendapat potongan 5%, dan Anda menerima komisi tunai <strong>Rp 250.000</strong> per unit!
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="ref-name-input" class="form-control" placeholder="Ketik nama Anda (Contoh: Narendra)" style="font-size: 0.78rem;">
+          <button id="btn-generate-ref" class="action-btn" style="white-space: nowrap; font-size: 0.78rem; font-weight: 700; border-color: var(--primary);">
+            Buat Link
+          </button>
+        </div>
+        <div id="ref-result-box" style="display: none; margin-top: 10px; padding: 10px; background: rgba(0, 242, 254, 0.08); border-radius: 6px; font-size: 0.76rem;">
+          <div style="color: var(--primary); font-weight: 700;">Link Referral Anda:</div>
+          <code id="ref-link-display" style="display: block; word-break: break-all; margin: 4px 0 8px 0; color: var(--text-main); font-size: 0.72rem;"></code>
+          <button id="btn-copy-ref-link" class="btn-submit" style="padding: 4px 12px; font-size: 0.72rem; width: auto;">
+            Salin Link Referral
+          </button>
+        </div>
+      </div>
+
+      <!-- Member Loyalty Tier Summary -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; text-align: center;">
+        <div style="background: rgba(125,125,125,0.06); padding: 8px; border-radius: 8px; border: 1px solid var(--border-glass);">
+          <div style="font-size: 1.1rem;">🥈</div>
+          <div style="font-size: 0.72rem; font-weight: 700;">Silver</div>
+          <div style="font-size: 0.65rem; color: var(--text-muted);">Beli 1 Unit • Bonus Bag</div>
+        </div>
+        <div style="background: rgba(255,190,11,0.08); padding: 8px; border-radius: 8px; border: 1px solid var(--warning);">
+          <div style="font-size: 1.1rem;">🥇</div>
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--warning);">Gold</div>
+          <div style="font-size: 0.65rem; color: var(--text-muted);">Beli 2 Unit • Diskon Servis</div>
+        </div>
+        <div style="background: rgba(157,78,221,0.08); padding: 8px; border-radius: 8px; border: 1px solid var(--secondary);">
+          <div style="font-size: 1.1rem;">💎</div>
+          <div style="font-size: 0.72rem; font-weight: 700; color: var(--secondary);">Platinum VIP</div>
+          <div style="font-size: 0.65rem; color: var(--text-muted);">Partner • Hotline Khusus</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Spec Matcher Wizard (Tahap 3 Pertumbuhan) -->
+  <div id="modal-wizard" class="modal-overlay">
+    <div class="modal-box glass-panel" style="max-width: 640px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <span class="spec-chip" style="background: rgba(0, 242, 254, 0.2); color: var(--primary);">Smart Spec Matcher AI</span>
+        <h2>🎯 Cari Laptop Impian Anda</h2>
+        <p>Jawab 2 pertanyaan singkat ini, AI kami akan merekomendasikan unit paling pas untuk Anda.</p>
+      </div>
+
+      <!-- Wizard Step 1: Use Case -->
+      <div id="wiz-step-1" class="wizard-step active">
+        <h4 style="font-size: 0.9rem; margin-bottom: 8px;">1. Apa kebutuhan utama penggunaan laptop Anda?</h4>
+        <div class="wizard-options-grid">
+          <button class="wizard-opt-btn" onclick="selectWizardUseCase('gaming')">
+            <h4>🎮 Gaming AAA & 3D Render</h4>
+            <p>Performa grafis ekstrem, frame rate tinggi, dan sistem pendingin tangguh.</p>
+          </button>
+          <button class="wizard-opt-btn" onclick="selectWizardUseCase('executive')">
+            <h4>💼 Bisnis & Mobilitas Tinggi</h4>
+            <p>Desain ultra tipis, layar OLED menawan, dan baterai tahan seharian.</p>
+          </button>
+          <button class="wizard-opt-btn" onclick="selectWizardUseCase('creator')">
+            <h4>🎨 Kreator Konten & Studio</h4>
+            <p>Editing video 4K/8K, akurasi warna tinggi, dan performa komputasi stabil.</p>
+          </button>
+          <button class="wizard-opt-btn" onclick="selectWizardUseCase('student')">
+            <h4>📚 Kuliah & Kantor Harian</h4>
+            <p>Harga terjangkau, responsif multitasking, dan awet untuk jangka panjang.</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Wizard Step 2: Recommendation Result -->
+      <div id="wiz-step-2" class="wizard-step">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <span class="spec-chip" style="background: rgba(0, 245, 155, 0.2); color: var(--success);">Rekomendasi Terbaik Untuk Anda</span>
+          <h3 id="wiz-result-title" style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--primary); margin-top: 6px;">ROG Titan X Pro</h3>
+          <p id="wiz-result-desc" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Paling tepat untuk kebutuhan Anda.</p>
+        </div>
+
+        <div id="wiz-result-box" style="background: rgba(125,125,125,0.06); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-glass); margin-bottom: 20px;"></div>
+
+        <div style="display: flex; gap: 10px;">
+          <button id="btn-wiz-view-3d" class="btn-submit" style="flex: 2;">
+            🚀 Sorot Unit di Showroom 3D
+          </button>
+          <button class="action-btn" style="flex: 1; justify-content: center;" onclick="resetWizard()">
+            Ulangi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Owner Analytics Dashboard & Automated Daily Report (Tahap 3 n8n) -->
+  <div id="modal-analytics" class="modal-overlay">
+    <div class="modal-box glass-panel" style="max-width: 660px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <span class="spec-chip" style="background: rgba(157, 78, 221, 0.2); color: #c77dff;">Internal Owner Panel</span>
+        <h2>📊 Dashboard Penjualan & Laporan Harian</h2>
+        <p>Statistik real-time aktivitas toko dan otomatisasi pelaporan n8n ke WhatsApp/Telegram pemilik.</p>
+      </div>
+
+      <!-- Analytics Cards Grid -->
+      <div class="analytics-stats-grid">
+        <div class="stat-box">
+          <span class="stat-label">Pengunjung Hari Ini</span>
+          <div class="stat-value" id="stat-visitors">142</div>
+          <div class="stat-sub">↑ +18% dari kemarin</div>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Total Prospek / Leads</span>
+          <div class="stat-value" id="stat-leads">18</div>
+          <div class="stat-sub">Kontak WhatsApp tercatat</div>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Pesanan Diterbitkan</span>
+          <div class="stat-value" id="stat-orders">6</div>
+          <div class="stat-sub">Invoice aktif</div>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Estimasi Omset Hari Ini</span>
+          <div class="stat-value" id="stat-revenue" style="font-size: 1.3rem;">Rp 114.700.000</div>
+          <div class="stat-sub">Konversi: 12.6%</div>
+        </div>
+      </div>
+
+      <!-- Customer Journey Funnel (Tahap 4 Optimasi) -->
+      <div style="background: rgba(125,125,125,0.05); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 16px;">
+        <h4 style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 12px; display: flex; justify-content: space-between;">
+          <span>📈 Corong Konversi Pelanggan (Funnel)</span>
+          <span style="font-size: 0.72rem; color: var(--primary);">Real-time Tracking</span>
+        </h4>
+        <div class="funnel-container">
+          <div class="funnel-step">
+            <div class="funnel-header">
+              <span>1. Masuk Showroom Virtual</span>
+              <strong>142 Pengunjung (100%)</strong>
+            </div>
+            <div class="funnel-bar-bg">
+              <div class="funnel-bar-fill" style="width: 100%; background: var(--primary);"></div>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-header">
+              <span>2. Menjelajah Showcase / Spesifikasi</span>
+              <strong>102 Orang (71.8%)</strong>
+            </div>
+            <div class="funnel-bar-bg">
+              <div class="funnel-bar-fill" style="width: 71.8%; background: var(--secondary);"></div>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-header">
+              <span>3. Menguji Studio Benchmark</span>
+              <strong>58 Orang (40.8%)</strong>
+            </div>
+            <div class="funnel-bar-bg">
+              <div class="funnel-bar-fill" style="width: 40.8%; background: var(--warning);"></div>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-header">
+              <span>4. Mengisi Lead / Tanya Maya AI</span>
+              <strong>18 Leads (12.6%)</strong>
+            </div>
+            <div class="funnel-bar-bg">
+              <div class="funnel-bar-fill" style="width: 12.6%; background: var(--accent);"></div>
+            </div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-header">
+              <span>5. Checkout & Penerbitan Invoice</span>
+              <strong>6 Pembeli (4.2%)</strong>
+            </div>
+            <div class="funnel-bar-bg">
+              <div class="funnel-bar-fill" style="width: 4.2%; background: var(--success);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trigger Daily Report & CSV Export Buttons -->
+      <div style="background: rgba(0, 242, 254, 0.05); border: 1px solid var(--primary); border-radius: var(--radius-md); padding: 18px; margin-bottom: 20px;">
+        <h4 style="font-size: 0.92rem; margin-bottom: 6px;">⚡ Otomatisasi & Ekspor Data CRM</h4>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+          Kirim rangkuman penjualan ke WhatsApp pemilik atau unduh rekap data mentah prospek untuk tim sales/akuntansi.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="btn-trigger-daily-report" class="btn-submit" style="flex: 2; background: linear-gradient(135deg, #00f59b, #00f2fe);">
+            🚀 Kirim Laporan Harian ke WhatsApp
+          </button>
+          <button id="btn-export-csv" class="action-btn" style="flex: 1; justify-content: center; font-weight: 700; border-color: var(--primary);">
+            📥 Unduh CSV
+          </button>
+        </div>
+        <div id="analytics-status" class="form-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 9: Wardrobe & Avatar Customizer (Tahap 4) -->
+  <div id="modal-wardrobe" class="modal-overlay">
+    <div class="modal-box glass-panel" style="max-width: 520px;">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <span class="spec-chip" style="background: rgba(0, 242, 254, 0.2); color: var(--primary);">Avatar Styling Studio</span>
+        <h2>👔 Kustomisasi Karakter Avatar 3D</h2>
+        <p>Sesuaikan tampilan gaya jaket, warna aksen, dan kacamata pintar untuk avatar Anda di showroom.</p>
+      </div>
+
+      <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">PILIHAN TEMA OUTFIT JAKET</div>
+      <div class="wardrobe-grid">
+        <div class="wardrobe-card active" data-outfit="navy">
+          <div class="wardrobe-swatch" style="background: #1e293b; border-color: #00f2fe;"></div>
+          <div class="wardrobe-title">Tech Navy</div>
+        </div>
+        <div class="wardrobe-card" data-outfit="rog">
+          <div class="wardrobe-swatch" style="background: #991b1b; border-color: #ff0055;"></div>
+          <div class="wardrobe-title">ROG Gamer</div>
+        </div>
+        <div class="wardrobe-card" data-outfit="creator">
+          <div class="wardrobe-swatch" style="background: #4c1d95; border-color: #c084fc;"></div>
+          <div class="wardrobe-title">Studio Pro</div>
+        </div>
+        <div class="wardrobe-card" data-outfit="white">
+          <div class="wardrobe-swatch" style="background: #f8fafc; border-color: #fbbf24;"></div>
+          <div class="wardrobe-title">Executive</div>
+        </div>
+        <div class="wardrobe-card" data-outfit="stealth">
+          <div class="wardrobe-swatch" style="background: #09090b; border-color: #00f59b;"></div>
+          <div class="wardrobe-title">Stealth</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">WARNA RAMBUT</div>
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <button class="action-btn active btn-hair-opt" data-hair="0x241812" style="flex: 1; justify-content: center; font-size: 0.74rem;">
+          Espresso
+        </button>
+        <button class="action-btn btn-hair-opt" data-hair="0x5c3a21" style="flex: 1; justify-content: center; font-size: 0.74rem;">
+          Chestnut
+        </button>
+        <button class="action-btn btn-hair-opt" data-hair="0xd4c2a5" style="flex: 1; justify-content: center; font-size: 0.74rem;">
+          Platinum
+        </button>
+      </div>
+
+      <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">AKSESORI KACAMATA PINTAR</div>
+      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button id="btn-glasses-toggle" class="action-btn" style="flex: 1; justify-content: center; padding: 10px; border-color: var(--primary);">
+          👓 Kacamata Pintar: <strong id="glasses-status-text" style="color: var(--primary); margin-left: 6px;">Aktif</strong>
+        </button>
+      </div>
+
+      <button class="btn-submit" onclick="document.getElementById('modal-wardrobe').classList.remove('active');">
+        Terapkan & Kembali ke Showroom
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 6: n8n Webhook Settings -->
+  <div id="modal-settings" class="modal-overlay">
+    <div class="modal-box glass-panel">
+      <button class="modal-close-btn" aria-label="Tutup">&times;</button>
+      <div class="modal-header">
+        <h2>⚙️ Konfigurasi Webhook n8n</h2>
+        <p>Hubungkan formulir pesanan & lead laptop ke workflow otomatisasi n8n Anda.</p>
+      </div>
+
+      <form id="settings-form">
+        <div class="form-group">
+          <label for="cfg-webhook-url">URL Webhook n8n (Production / Tunnel)</label>
+          <input type="url" id="cfg-webhook-url" class="form-control" placeholder="https://tunnel.domain.com/webhook/ekalaya-lead">
+          <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">
+            Contoh: URL Webhook n8n dengan path <code>/webhook/ekalaya-lead</code>
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="cfg-webhook-secret">Header Secret Token (Opsional)</label>
+          <input type="text" id="cfg-webhook-secret" class="form-control" placeholder="Token rahasia">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="btn-submit" style="flex: 2;">
+            Simpan Konfigurasi
+          </button>
+          <button type="button" id="btn-test-webhook" class="action-btn" style="flex: 1; justify-content: center;">
+            Uji Ping
+          </button>
+        </div>
+
+        <div id="settings-status" class="form-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 2D FALLBACK PRESENTATION MODE ==================== -->
+  <div id="view-2d-container">
+    <div class="container-2d">
+      <div class="hero-2d">
+        <span class="spec-chip" style="background: rgba(0, 242, 254, 0.2); color: var(--primary);">Katalog Ringan 2D</span>
+        <h2>Ekalaya Laptop Hub</h2>
+        <p>Pilihan laptop original bergaransi resmi. Cocok untuk browsing cepat di segala perangkat.</p>
+      </div>
+
+      <div id="services-grid-2d" class="grid-2d"></div>
+
+      <div class="card-2d" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 36px;">
+        <h3 style="font-family: var(--font-heading); font-size: 1.4rem; margin-bottom: 10px; color: var(--text-main);">Butuh Bantuan Memilih Laptop?</h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px;">Hubungi tim konsultan hardware kami untuk rekomendasi spek paling pas dengan anggaran Anda.</p>
+        <button class="action-btn btn-cta" style="margin: 0 auto; padding: 12px 28px; font-size: 0.95rem;" onclick="document.getElementById('modal-reception').classList.add('active');">
+          Buka Form Konsultasi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

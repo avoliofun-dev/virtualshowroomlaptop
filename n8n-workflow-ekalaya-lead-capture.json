@@ -1,0 +1,101 @@
+{
+  "name": "Ekalaya Laptop Store - Full Suite Automation (Tahap 1, 2, 3, 4)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ekalaya-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "11111111-0000-0000-0000-000000000001",
+      "name": "Webhook Ekalaya Store",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "ekalaya-lead"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Klasifikasi & Normalisasi Event Lengkap Ekalaya Laptop Store (Tahap 1-4)\nconst input = $json.body || $json;\nconst eventType = input.event || 'lead_captured';\n\nif (eventType === 'daily_report_trigger') {\n  // Tahap 3: Laporan Harian Pemilik Toko\n  const m = input.metrics || {};\n  return {\n    eventType: 'LAPORAN_HARIAN',\n    pesanWA: `📊 *LAPORAN HARIAN EKALAYA LAPTOP STORE*\\nTanggal: ${m.date || new Date().toLocaleDateString('id-ID')}\\n\\n👥 Pengunjung: ${m.totalVisitors || '142'}\\n📋 Total Leads: ${m.totalLeads || '18'}\\n📦 Total Order: ${m.totalOrders || '6'}\\n💰 Omset Harian: ${m.totalRevenue || 'Rp 114.700.000'}\\n🔥 Unit Terlaris: ${m.topSellingUnit || 'ROG Titan X & ZenAir OLED'}\\n\\n_Laporan di-generate otomatis oleh n8n._`,\n    timestamp: input.timestamp\n  };\n} else if (eventType === 'laptop_order_created') {\n  // Tahap 2: Pesanan & Invoice Baru\n  return {\n    eventType: 'ORDER_BARU',\n    invoiceNumber: input.invoiceNumber,\n    buyerName: input.order.buyerName,\n    buyerWhatsapp: input.order.buyerWhatsapp,\n    laptopTitle: input.order.laptopTitle,\n    price: input.order.price,\n    paymentMethod: input.order.paymentMethod,\n    address: input.order.buyerAddress,\n    voucherCode: input.order.voucherCode,\n    timestamp: input.timestamp\n  };\n} else if (eventType === 'laptop_payment_confirmed') {\n  // Tahap 2: Pelunasan Pembayaran\n  return {\n    eventType: 'PEMBAYARAN_LUNAS',\n    invoiceNumber: input.invoiceNumber,\n    buyer: input.buyer,\n    laptop: input.laptop,\n    status: 'PAID',\n    timestamp: input.timestamp\n  };\n} else if (eventType === 'referral_lead_captured') {\n  // Tahap 4: Program Referral VIP\n  return {\n    eventType: 'REFERRAL_LEAD',\n    referrer: input.referrer,\n    leadName: input.leadName,\n    leadWhatsapp: input.leadWhatsapp,\n    bonusCommission: 'Rp 250.000',\n    timestamp: input.timestamp\n  };\n} else {\n  // Tahap 1: Lead Konsultasi Tamu\n  const data = input.data || {};\n  return {\n    eventType: 'LEAD_KONSULTASI',\n    fullName: data.fullName || 'Tamu Web',\n    contact: data.contact || '-',\n    laptopInterest: data.laptopInterest || 'Laptop Umum',\n    budget: data.budget || '-',\n    notes: data.notes || '-',\n    timestamp: input.timestamp\n  };\n}"
+      },
+      "id": "11111111-0000-0000-0000-000000000002",
+      "name": "Router & Generator Pesan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Event \" + $json.eventType + \" berhasil diproses oleh n8n Ekalaya\",\n  \"serverTime\": $now.toISO()\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "11111111-0000-0000-0000-000000000003",
+      "name": "Kirim Respon ke Browser",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetId": "MASUKKAN_ID_GOOGLE_SHEET_ANDA",
+        "range": "Data_Aktivitas!A:I",
+        "options": {}
+      },
+      "id": "11111111-0000-0000-0000-000000000004",
+      "name": "Simpan ke Google Sheets / CRM",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        380
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Ekalaya Store": {
+      "main": [
+        [
+          {
+            "node": "Router & Generator Pesan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router & Generator Pesan": {
+      "main": [
+        [
+          {
+            "node": "Kirim Respon ke Browser",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Simpan ke Google Sheets / CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

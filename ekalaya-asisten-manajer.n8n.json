@@ -1,0 +1,538 @@
+{
+  "name": "Ekalaya - Asisten Manajer AI",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Asisten Manajer Ekalaya\n**Jalur 1 (atas):** event dari web (lead, chat, pesanan) → AI menilai → simpan ke Sheets → kirim ke manajer.\n**Jalur 2 (bawah):** laporan pagi otomatis jam 08:00 WIB.\n\nGanti semua nilai `GANTI...` sebelum mengaktifkan.",
+        "height": 160,
+        "width": 420
+      },
+      "id": "note",
+      "name": "Catatan",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ekalaya-event",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "ekalaya-event-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.headers['x-secret'] }}",
+              "rightValue": "={{ $env.N8N_SECRET }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cek",
+      "name": "Cek Secret",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "ok",
+      "name": "Balas 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: 'unauthorized' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "tolak",
+      "name": "Balas 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "event",
+              "value": "={{ $('Webhook Event').item.json.body.event || 'lead' }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "nama",
+              "value": "={{ $('Webhook Event').item.json.body.nama || 'Tanpa nama' }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "kontak",
+              "value": "={{ $('Webhook Event').item.json.body.kontak || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "produk",
+              "value": "={{ $('Webhook Event').item.json.body.produk || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "pesan",
+              "value": "={{ $('Webhook Event').item.json.body.pesan || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "sumber",
+              "value": "={{ $('Webhook Event').item.json.body.sumber || 'kantor-virtual' }}",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "ruang",
+              "value": "={{ $('Webhook Event').item.json.body.ruang || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "8",
+              "name": "diterima_pada",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "norm",
+      "name": "Normalisasi",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 700, system: \"Anda adalah asisten manajer penjualan untuk Ekalaya Virtual Office, showroom 3D online. Analisis data pengunjung/lead yang diberikan. Balas HANYA dengan JSON valid tanpa teks lain, dengan kunci: kategori (lead_panas | lead_hangat | lead_dingin | pertanyaan | keluhan | spam), skor (angka 0-100 tingkat kesiapan membeli), prioritas (tinggi | sedang | rendah), ringkasan (maks 25 kata, bahasa Indonesia), saran_tindakan (satu langkah konkret untuk tim), balasan_draft (pesan WhatsApp singkat, sopan, bahasa Indonesia).\", messages: [{ role: 'user', content: JSON.stringify($json) }] }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "ai-analisis-lead",
+      "name": "AI Analisis Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -60
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GANTI",
+          "name": "Anthropic API Key (header x-api-key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const raw = $input.first().json.content?.[0]?.text || '{}';\nlet ai;\ntry {\n  ai = JSON.parse(raw.replace(/```json|```/g, '').trim());\n} catch (e) {\n  ai = { kategori: 'tidak_diketahui', skor: 0, prioritas: 'sedang', ringkasan: raw.slice(0, 200), saran_tindakan: 'Tinjau manual', balasan_draft: '' };\n}\nconst data = $('Normalisasi').first().json;\nreturn [{ json: { ...data, ...ai, diproses_pada: new Date().toISOString() } }];"
+      },
+      "id": "parse",
+      "name": "Olah Hasil AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GANTI_ID_GOOGLE_SHEET"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "sheet-simpan",
+      "name": "Simpan ke Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1320,
+        -140
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "GANTI_CHAT_ID_MANAGER",
+        "text": "={{ ($json.prioritas === 'tinggi' ? '🔥 PRIORITAS TINGGI' : '📩 Lead baru') + '\\n\\nNama: ' + $json.nama + '\\nKontak: ' + $json.kontak + '\\nProduk: ' + $json.produk + '\\nKategori: ' + $json.kategori + ' (skor ' + $json.skor + ')\\n\\nRingkasan: ' + $json.ringkasan + '\\nSaran: ' + $json.saran_tindakan + '\\n\\nDraft balasan:\\n' + $json.balasan_draft }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "tg-lead",
+      "name": "Kabari Manajer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        40
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "GANTI",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "jadwal",
+      "name": "Jam 08:00 Pagi",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "GANTI_ID_GOOGLE_SHEET"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "options": {}
+      },
+      "id": "sheet-baca",
+      "name": "Baca Data Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        220,
+        420
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GANTI",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $input.all().map(i => i.json).filter(r => r.diproses_pada);\nconst batas = Date.now() - 24 * 60 * 60 * 1000;\nconst baru = rows.filter(r => new Date(r.diproses_pada).getTime() >= batas);\nconst skor = baru.map(r => Number(r.skor) || 0);\nconst rata = skor.length ? Math.round(skor.reduce((a, b) => a + b, 0) / skor.length) : 0;\nconst top = [...baru].sort((a, b) => (Number(b.skor) || 0) - (Number(a.skor) || 0)).slice(0, 5)\n  .map(r => ({ nama: r.nama, kontak: r.kontak, produk: r.produk, skor: r.skor, saran: r.saran_tindakan }));\nreturn [{ json: {\n  total_24_jam: baru.length,\n  prioritas_tinggi: baru.filter(r => r.prioritas === 'tinggi').length,\n  keluhan: baru.filter(r => r.kategori === 'keluhan').length,\n  rata_rata_skor: rata,\n  lead_teratas: top\n} }];"
+      },
+      "id": "ringkas",
+      "name": "Hitung Ringkasan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 700, system: \"Anda adalah asisten pribadi seorang manajer. Dari data ringkasan lead 24 jam terakhir, tulis laporan pagi singkat dalam bahasa Indonesia (maks 150 kata): kondisi umum, lead prioritas yang harus ditindaklanjuti hari ini, satu risiko atau peluang, dan 3 saran tindakan. Gunakan teks biasa tanpa markdown.\", messages: [{ role: 'user', content: JSON.stringify($json) }] }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "ai-laporan-pagi",
+      "name": "AI Laporan Pagi",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        420
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GANTI",
+          "name": "Anthropic API Key (header x-api-key)"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "chatId": "GANTI_CHAT_ID_MANAGER",
+        "text": "={{ '☀️ Laporan Pagi Ekalaya\\n\\n' + $json.content[0].text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "tg-laporan",
+      "name": "Kirim Laporan",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        420
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "GANTI",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Event": {
+      "main": [
+        [
+          {
+            "node": "Cek Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cek Secret": {
+      "main": [
+        [
+          {
+            "node": "Balas 200",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Balas 401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Balas 200": {
+      "main": [
+        [
+          {
+            "node": "Normalisasi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalisasi": {
+      "main": [
+        [
+          {
+            "node": "AI Analisis Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analisis Lead": {
+      "main": [
+        [
+          {
+            "node": "Olah Hasil AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Olah Hasil AI": {
+      "main": [
+        [
+          {
+            "node": "Simpan ke Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Kabari Manajer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jam 08:00 Pagi": {
+      "main": [
+        [
+          {
+            "node": "Baca Data Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baca Data Leads": {
+      "main": [
+        [
+          {
+            "node": "Hitung Ringkasan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hitung Ringkasan": {
+      "main": [
+        [
+          {
+            "node": "AI Laporan Pagi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Laporan Pagi": {
+      "main": [
+        [
+          {
+            "node": "Kirim Laporan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Jakarta"
+  },
+  "pinData": {},
+  "tags": []
+}

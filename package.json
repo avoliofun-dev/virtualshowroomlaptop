@@ -1,0 +1,18 @@
+{
+  "name": "ekalaya-creative-agency-virtual-office",
+  "version": "1.0.0",
+  "description": "3D Virtual Office & Automation Showroom for Ekalaya Creative Agency",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "virtual-office",
+    "threejs",
+    "creative-agency",
+    "n8n-automation"
+  ],
+  "author": "Ekalaya Creative",
+  "license": "MIT"
+}
